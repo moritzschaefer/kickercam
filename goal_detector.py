@@ -4,9 +4,9 @@ import cv2
 
 GOAL_HEIGHT = 235
 GOAL_WIDTH = 42
-ALLOWED_DIFF = 10
-SEARCH_WIDTH = 200
-SEARCH_HEIGHT = 400
+ALLOWED_DIFF = 20
+SEARCH_WIDTH = 250
+SEARCH_HEIGHT = 500
 WIDTH = 1600
 HEIGHT = 1200
 
@@ -28,15 +28,16 @@ def detect_goals(hsv_img):
                 cv2.RETR_EXTERNAL,
                 cv2.CHAIN_APPROX_SIMPLE)
 
+        # TODO improve: use the best rect min((rect_w-w)^2+(rect_h-h)^2)
         for i in range(len(contours)):
             # not important
             rect = cv2.boundingRect(contours[i])  # x,y,w,h
             if abs(rect[2]-GOAL_WIDTH) <= ALLOWED_DIFF and \
                     abs(rect[3]-GOAL_HEIGHT) <= ALLOWED_DIFF:
+                rects.append([rect[0]+search_x, rect[1]+search_y, rect[2], rect[3]])
                 break
         else:
-            raise ValueError('No rectangle found')  # TODO what now?
-        rects.append([rect[0]+search_x, rect[1]+search_y, rect[2], rect[3]])
+            print('Didnot find rectangle for search_x {}'.format(search_x))
     return rects
 
 
