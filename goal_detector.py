@@ -31,10 +31,12 @@ def detect_goals(hsv_img):
         for i in range(len(contours)):
             # not important
             rect = cv2.boundingRect(contours[i])  # x,y,w,h
+            #print(rect)
             if abs(rect[2]-GOAL_WIDTH) <= ALLOWED_DIFF and \
                     abs(rect[3]-GOAL_HEIGHT) <= ALLOWED_DIFF:
-                break
+                continue
         else:
+            return rects
             raise ValueError('No rectangle found')  # TODO what now?
         rects.append([rect[0]+search_x, rect[1]+search_y, rect[2], rect[3]])
     return rects
