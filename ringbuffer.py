@@ -24,7 +24,11 @@ class Ringbuffer:
     def __iter__(self):
         for frame_i in list(range(self.current, self.num_frames)) + \
                 list(range(0, self.current)):
-            yield cv2.imdecode(self.data[frame_i], cv2.IMREAD_COLOR)
+            try:
+                yield cv2.imdecode(self.data[frame_i], cv2.IMREAD_COLOR)
+            except Exception as e:
+                print('empty buffer. nothing to decode')
+                return
 
 
 

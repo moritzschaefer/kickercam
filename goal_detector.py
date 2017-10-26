@@ -10,6 +10,7 @@ from config import WIDTH, HEIGHT
 
 GOAL_HEIGHT = 235
 GOAL_WIDTH = 42
+FPS = 42
 ALLOWED_DIFF = 40
 SEARCH_WIDTH = 250
 SEARCH_HEIGHT = 500
@@ -160,21 +161,12 @@ class GoalDetector:
         return goals_obstacles
 
 
-def display_replay(buf):
-    '''
-    '''
-    for img in buf:
-        hsv = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
-        cv2.imshow('window', hsv)
-        cv2.waitKey(70)
-
-
 def main():
     '''
     detect and print the detected goals
     '''
-    buf = Ringbuffer(1 * 42)
-    replay = False
+    buf = Ringbuffer(4 * FPS)
+    replay_it = None
 
     gd = GoalDetector()
     videopath = './match1.h264'
@@ -194,18 +186,23 @@ def main():
     while grabbed:
         t0 = time.time()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        obs, _ = gd.step(hsv)
-        resized = cv2.resize(hsv, (960, 540))
-        cv2.imshow('image', resized)
-        if obs[0] or obs[1]:
-            replay = True
-            display_replay(buf)
+        if replay_it:
+            try:
+                cv2.imshow('window', next(replay_it))
+            except StopIteration:
+                replay_it = None
         else:
-            cv2.waitKey(1)  # need to wait for event loop and displaying...
-        t3 = time.time()
+            obs, _ = gd.step(hsv)
+            resized = cv2.resize(hsv, (960, 540))
+            cv2.imshow('window', resized)
+            if obs[0] or obs[1]:
+                replay_it = iter(buf)
+
+        cv2.waitKey(1)  # need to wait for event loop and displaying...
 
         (grabbed, frame) = camera.read()
-        buf.store_next_frame((frame))
+        if not replay_it:
+            buf.store_next_frame((frame))
         t4 = time.time()
         # print('{} grabbing, {} hsvconv, {} compute, {} displaying'
         #       .format(t4 - t3, t1 - t0, t2 - t1, t3 - t2))
