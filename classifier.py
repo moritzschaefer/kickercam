@@ -19,9 +19,9 @@ class Classifier:
         x_width = obs_cord[2]
         y_width = obs_cord[3]
 
-        obstacle = hsv_img[x:x+x_width, y+y_width, :].copy
+        obstacle = hsv_img[x:x+x_width, y:y+y_width, :].copy()
         means = np.median(obstacle, axis=(0, 1))
-        moments = np.asarray(cv2.moments(diff_img, binaryImage=True))
+        moments = np.asarray(cv2.moments(diff_img, binaryImage=True).values())
         features = np.concatenate(([x_width, y_width], means, moments))
         return features
     

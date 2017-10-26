@@ -77,8 +77,9 @@ class GoalDetector:
         :returns: A list of rects with relative positions
         '''
         goals_obstacles = [[], []]
-        for rect, goal_img, obstacles in \
-                zip(self.goal_rects, self.goal_images, goals_obstacles):
+        goals_diff = [[], []]
+        for rect, goal_img, obstacles, diff_img in \
+                zip(self.goal_rects, self.goal_images, goals_obstacles, goals_diff):
             current_goal_img = hsv_img[
                     rect[1]:rect[1]+rect[3],
                     rect[0]:rect[0]+rect[2],
@@ -97,9 +98,10 @@ class GoalDetector:
                 if rect[2] > MIN_OBSTACLE_LENGTH and \
                         rect[3] > MIN_OBSTACLE_LENGTH:
                     obstacles.append(rect)
+                    diff_img.append(diff)
                     cv2.imshow('obstacle', diff * 255)
 
-        return goals_obstacles
+        return goals_obstacles, goals_diff
 
     def step(self, hsv_img):
         '''
@@ -129,7 +131,7 @@ class GoalDetector:
                     cv2.imshow("goal", hsv2[:, :, 2])
                     cv2.waitKey(40)
         # Get obstacles harnessing goal diff images
-        goals_obstacles = self.goal_obstacles(hsv_img)
+        goals_obstacles, goal_diff = self.goal_obstacles(hsv_img)
 
         for goal_rect, obstacles in zip(self.goal_rects, goals_obstacles):
             for obstacle in obstacles:
@@ -142,9 +144,19 @@ class GoalDetector:
                         (255, 0, 0),
                         6)
         self.frame_count += 1
+        return goals_obstacles, goal_diff
+
+    def relativeToTotalPosition(self,goals_obstacles):
+        '''
+        Tranforms the relative position to global position and add the eroded border
+        
+        '''
+        for goal_rect, obstacles in zip(self.goal_rects, goals_obstacles):
+            for obstacle in obstacles:                
+                obstacle = (goal_rect[0]+obstacle[0]-5,
+                            goal_rect[1]+obstacle[1]-5,
+                            obstacle[2]+5, obstacle[3]+5)
         return goals_obstacles
-
-
 def main():
     '''
     detect and print the detected goals
@@ -160,7 +172,7 @@ def main():
         camera.read()
     while grabbed:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        obs = gd.step(hsv)
+        obs, _ = gd.step(hsv)
         resized = cv2.resize(hsv, (960, 540))
         cv2.imshow('image', resized)
         if obs[0] or obs[1]:

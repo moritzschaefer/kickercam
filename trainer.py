@@ -7,8 +7,8 @@ Created on Thu Oct 26 12:40:23 2017
 
 import numpy as np
 import cv2
-from .goal_detector import GoalDetector
-
+from goal_detector import GoalDetector
+from classifier import Classifier
 class Trainer:
     def __init__(self,videopath):
         self.videopath = videopath
@@ -16,16 +16,35 @@ class Trainer:
     def saveTrainingdata(self, folder):
         
         gd = GoalDetector()
+        classifier = Classifier()
         camera = cv2.VideoCapture(self.videopath)
+        imagecount = 0
         (grabbed, frame) = camera.read()
-        while grabbed:
+        features = []
+        while grabbed:  # and imagecount <= 100:
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-            obs = gd.step(hsv)
-            resized = cv2.resize(hsv, (960, 540))
-            cv2.imshow('image', resized)
-            if obs[0] or obs[1]:
-                cv2.waitKey(0)
-            else:
-                cv2.waitKey(1)
-    
+            obs, diff = gd.step(hsv)
+            obs = gd.relativeToTotalPosition(obs)
+            if obs[0]:
+                for obstacle, diff_img in zip(obs[0], diff[0]):
+                    features.append(classifier.extractFeatures(obstacle, hsv, diff_img))
+                    cv2.imwrite( folder + str(imagecount) + ".jpg", frame[400:800, 0:400, :])
+                    imagecount += 1
+                
+            if obs[1]:
+                for obstacle, diff_img in zip(obs[1], diff[1]):
+                    features.append(classifier.extractFeatures(obstacle, hsv, diff_img))
+                    cv2.imwrite(folder + str(imagecount) + ".jpg", frame[400:800, 1200:, :])
+                    imagecount += 1
             (grabbed, frame) = camera.read()
+        features = np.asarray(features)
+        np.savetxt(folder + "Features.txt", features)
+
+
+def main():
+    tr = Trainer("./match2.h264")    
+    tr.saveTrainingdata("./trainingdata/")
+    
+    
+if __name__ == "__main__":
+    main()
