@@ -148,6 +148,18 @@ class GoalDetector:
         self.frame_count += 1
         return goals_obstacles, goal_diff
 
+    def relative_to_absolute_position(self, goals_obstacles):
+        '''
+        Tranforms the relative position to absolute position and add the eroded border
+        '''
+        for goal_rect, obstacles in zip(self.goal_rects, goals_obstacles):
+            for obstacle in obstacles:
+                obstacle = (goal_rect[0]+obstacle[0]-5,
+                            goal_rect[1]+obstacle[1]-5,
+                            obstacle[2]+5, obstacle[3]+5)
+        return goals_obstacles
+
+
 def display_replay(buf):
     '''
     '''
@@ -155,18 +167,6 @@ def display_replay(buf):
         hsv = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
         cv2.imshow('window', hsv)
         cv2.waitKey(70)
-
-def relativeToTotalPosition(self,goals_obstacles):
-    '''
-    Tranforms the relative position to global position and add the eroded border
-
-    '''
-    for goal_rect, obstacles in zip(self.goal_rects, goals_obstacles):
-        for obstacle in obstacles:
-            obstacle = (goal_rect[0]+obstacle[0]-5,
-                        goal_rect[1]+obstacle[1]-5,
-                        obstacle[2]+5, obstacle[3]+5)
-    return goals_obstacles
 
 
 def main():
@@ -211,6 +211,7 @@ def main():
         #       .format(t4 - t3, t1 - t0, t2 - t1, t3 - t2))
 
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
