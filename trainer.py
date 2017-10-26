@@ -38,8 +38,9 @@ class Trainer:
                     imagecount += 1
             (grabbed, frame) = camera.read()
         features = np.asarray(features)
+        labels = np.zeros(len(features))
         np.savetxt(folder + "Features.txt", features)
-
+        np.savetxt(folder + "Labels.txt", labels)
 
 def main():
     tr = Trainer("./match2.h264")    
