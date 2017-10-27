@@ -16,7 +16,6 @@ class Trainer:
         self.videopath = videopath
 
     def save_training_data(self, folder):
-
         gd = GoalDetector()
         classifier = Classifier()
         camera = cv2.VideoCapture(self.videopath)
@@ -30,7 +29,7 @@ class Trainer:
             if obs[0]:
                 for obstacle, diff_img in zip(obs[0], diff[0]):
                     features.append(classifier.extract_features(
-                        obstacle, hsv, diff_img))
+                        obstacle, hsv, gd.goal_rects[0], diff_img))
                     cv2.imwrite(folder + str(imagecount) +
                                 ".jpg", frame[400:800, 0:400, :])
                     imagecount += 1
@@ -38,7 +37,7 @@ class Trainer:
             if obs[1]:
                 for obstacle, diff_img in zip(obs[1], diff[1]):
                     features.append(classifier.extract_features(
-                        obstacle, hsv, diff_img))
+                        obstacle, hsv, gd.goal_rects[1], diff_img))
                     cv2.imwrite(folder + str(imagecount) +
                                 ".jpg", frame[400:800, 1200:, :])
                     imagecount += 1

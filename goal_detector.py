@@ -79,12 +79,13 @@ class GoalDetector:
 
     def goal_obstacles(self, hsv_img):
         '''
-        Find images harnessing diff image and return them
+        Find obstacles harnessing diff image and return them
 
         TODO goal_obstacles should return two lists, one for the one
         goal, one for the other
 
-        :returns: A list of rects with relative positions
+        :returns: A list of rects with relative positions and the
+        goals_diff images
         '''
         goals_obstacles = [[], []]
         goals_diff = [[], []]
@@ -99,10 +100,10 @@ class GoalDetector:
                 rect[0]:rect[0] + rect[2],
                 2]
             diff = ((goal_img - current_goal_img) > 15).astype(np.uint8)
-            diff = cv2.erode(diff, np.ones((9, 9), np.uint8))
+            eroded_diff = cv2.erode(diff, np.ones((9, 9), np.uint8))
             # TODO maybe cut borders?
             _, contours, _ = cv2.findContours(
-                diff,
+                eroded_diff,
                 cv2.RETR_EXTERNAL,
                 cv2.CHAIN_APPROX_SIMPLE)
 
@@ -113,7 +114,8 @@ class GoalDetector:
                         rect[3] > MIN_OBSTACLE_LENGTH:
                     obstacles.append(rect)
                     diff_img.append(diff)
-                    cv2.imshow('obstacle', diff * 255)
+                    if DEBUG:
+                        cv2.imshow('obstacle', diff * 255)
 
         return goals_obstacles, goals_diff
 
