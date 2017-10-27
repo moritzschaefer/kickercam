@@ -29,7 +29,7 @@ class Trainer:
             obs = gd.relative_to_absolute_position(obs)
             if obs[0]:
                 for obstacle, diff_img in zip(obs[0], diff[0]):
-                    features.append(classifier.extractFeatures(
+                    features.append(classifier.extract_features(
                         obstacle, hsv, diff_img))
                     cv2.imwrite(folder + str(imagecount) +
                                 ".jpg", frame[400:800, 0:400, :])
@@ -37,7 +37,7 @@ class Trainer:
 
             if obs[1]:
                 for obstacle, diff_img in zip(obs[1], diff[1]):
-                    features.append(classifier.extractFeatures(
+                    features.append(classifier.extract_features(
                         obstacle, hsv, diff_img))
                     cv2.imwrite(folder + str(imagecount) +
                                 ".jpg", frame[400:800, 1200:, :])
