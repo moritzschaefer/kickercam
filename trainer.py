@@ -41,11 +41,32 @@ class Trainer:
         labels = np.zeros(len(features))
         np.savetxt(folder + "Features.txt", features)
         np.savetxt(folder + "Labels.txt", labels)
+        
+    def trainModel(self, folder):
+        features = np.loadtxt(folder + "Features.txt")
+        labels = np.loadtxt(folder + "Labels.txt")
+        classifier = Classifier()
+        trainingdata = features[0:2500, :]
+        testdata = features[2500:, :]
+        traininglabels = labels[0:2500]
+        testlabels = labels[2500:]
+        
+        classifier.train(trainingdata, traininglabels)
+            
+        resultlabels = classifier.predict(testdata)
+        print(np.sum(resultlabels))
 
+        resultlabels = classifier.predict(trainingdata) 
+        print(np.sum(traininglabels))
+        print(np.sum(resultlabels))
+        
+        classifier.test(trainingdata,traininglabels)
+        classifier.test(testdata,testlabels)
+                
 def main():
     tr = Trainer("./match2.h264")    
-    tr.saveTrainingdata("./trainingdata/")
-    
+    #tr.saveTrainingdata("./trainingdata/")
+    tr.trainModel("./trainingdata/")
     
 if __name__ == "__main__":
     main()
