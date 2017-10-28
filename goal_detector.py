@@ -2,7 +2,6 @@
 # TODO refactor: do the whole pipeline twice (once for each goal). right it's
 # each pipeline step always iteration over both goals
 import numpy as np
-import time
 import cv2
 
 from ringbuffer import Ringbuffer
@@ -38,9 +37,11 @@ class GoalDetector:
 
         for search_x in [0, WIDTH - SEARCH_WIDTH]:
             possible_area = hsv_img[
-                    search_y:search_y+SEARCH_HEIGHT,
-                    search_x:search_x+SEARCH_WIDTH, :]
-            dark_areas = (possible_area[:, :, 1] + possible_area[:, :, 2]  < 10).astype(np.uint8)
+                search_y:search_y + SEARCH_HEIGHT,
+                search_x:search_x + SEARCH_WIDTH, :]
+            dark_areas = (
+                (possible_area[:, :, 1] + possible_area[:, :, 2])
+                < 10).astype(np.uint8)
             new_image, contours, _ = cv2.findContours(
                 dark_areas,
                 cv2.RETR_EXTERNAL,
@@ -50,48 +51,59 @@ class GoalDetector:
             minh = [0] * len(contours)
             for i in range(len(contours)):
                 rect = cv2.boundingRect(contours[i])  # x,y,w,h
-                minh[i]=abs(rect[2]-GOAL_WIDTH)+  abs(rect[3]-GOAL_HEIGHT)
+                minh[i] = abs(rect[2] - GOAL_WIDTH) + \
+                    abs(rect[3] - GOAL_HEIGHT)
             if(min(minh) <= ALLOWED_DIFF):
                 rect = cv2.boundingRect(contours[np.argmin(minh)])
                 rects.append([
-                            rect[0]+search_x,
-                            rect[1]+search_y,
-                            rect[2],
-                            rect[3]])
+                    rect[0] + search_x,
+                    rect[1] + search_y,
+                    rect[2],
+                    rect[3]])
                 goal_img.append(
-                            possible_area[
-                                rect[1]:rect[1]+rect[3],
-                                rect[0]:rect[0]+rect[2], 2])
+                    possible_area[
+                        rect[1]:rect[1] + rect[3],
+                        rect[0]:rect[0] + rect[2], 2])
             else:
                 print('Didnot find rectangle for search_x {}'.format(search_x))
                 raise ValueError("No Goals found in Image")
-        if(np.sum(cv2.erode(np.uint8(goal_img[0] > 35), np.ones((9, 9), np.uint8))) > 15 or
-            np.sum(cv2.erode(np.uint8(goal_img[1] > 35), np.ones((9, 9), np.uint8))) > 15):
+        if(np.sum(cv2.erode(
+                np.uint8(goal_img[0] > 35),
+                np.ones((9, 9), np.uint8)
+        )) > 15 or
+                np.sum(cv2.erode(
+                    np.uint8(goal_img[1] > 35),
+                    np.ones((9, 9), np.uint8))) > 15):
             raise ValueError("Probably something in the goal")
         return rects, goal_img
 
     def goal_obstacles(self, hsv_img):
         '''
-        Find images harnessing diff image and return them
+        Find obstacles harnessing diff image and return them
 
         TODO goal_obstacles should return two lists, one for the one
         goal, one for the other
 
-        :returns: A list of rects with relative positions
+        :returns: A list of rects with relative positions and the
+        goals_diff images
         '''
         goals_obstacles = [[], []]
         goals_diff = [[], []]
         for rect, goal_img, obstacles, diff_img in \
-                zip(self.goal_rects, self.goal_images, goals_obstacles, goals_diff):
+                zip(
+                        self.goal_rects,
+                        self.goal_images,
+                        goals_obstacles,
+                        goals_diff):
             current_goal_img = hsv_img[
                 rect[1]:rect[1] + rect[3],
                 rect[0]:rect[0] + rect[2],
                 2]
             diff = ((goal_img - current_goal_img) > 15).astype(np.uint8)
-            diff = cv2.erode(diff, np.ones((9, 9), np.uint8))
+            eroded_diff = cv2.erode(diff, np.ones((9, 9), np.uint8))
             # TODO maybe cut borders?
             _, contours, _ = cv2.findContours(
-                diff,
+                eroded_diff,
                 cv2.RETR_EXTERNAL,
                 cv2.CHAIN_APPROX_SIMPLE)
 
@@ -102,7 +114,8 @@ class GoalDetector:
                         rect[3] > MIN_OBSTACLE_LENGTH:
                     obstacles.append(rect)
                     diff_img.append(diff)
-                    cv2.imshow('obstacle', diff * 255)
+                    if DEBUG:
+                        cv2.imshow('obstacle', diff * 255)
 
         return goals_obstacles, goals_diff
 
@@ -113,7 +126,8 @@ class GoalDetector:
         '''
         # Update goal information once in a while
         if self.frame_count % GOAL_UPDATE_INTERVAL == 0:
-            # TODO  check if there is no obstacle in the goal at the moment (it needs to be black for 95% of the pixels (or so)
+            # TODO  check if there is no obstacle in the goal at the moment
+            # (it needs to be black for 95% of the pixels (or so)
             try:
                 self.goal_rects, self.goal_images = self.detect_goals(hsv_img)
             except ValueError as e:
@@ -125,11 +139,11 @@ class GoalDetector:
                          self.goal_rects[0][1] + self.goal_rects[0][3],
                          self.goal_rects[0][0]:
                          self.goal_rects[0][0] + self.goal_rects[0][2], :] = \
-                             [255,0,0]
+                        [255, 0, 0]
                     hsv2[self.goal_rects[1][1]:self.goal_rects[1][1]
                          + self.goal_rects[1][3],
                          self.goal_rects[1][0]:self.goal_rects[1][0]
-                         + self.goal_rects[1][2],:] = [255,0,0]
+                         + self.goal_rects[1][2], :] = [255, 0, 0]
                     hsv2 = cv2.resize(hsv2, (960, 540))
                     cv2.imshow("goal", hsv2[:, :, 2])
                     cv2.waitKey(40)
@@ -141,23 +155,24 @@ class GoalDetector:
                 y = goal_rect[1] + obstacle[1]
                 x = goal_rect[0] + obstacle[0]
                 cv2.rectangle(
-                        hsv_img,
-                        (x-5, y-5),
-                        (x+obstacle[2]+5, y+obstacle[3]+5),
-                        (255, 0, 0),
-                        6)
+                    hsv_img,
+                    (x - 5, y - 5),
+                    (x + obstacle[2] + 5, y + obstacle[3] + 5),
+                    (255, 0, 0),
+                    6)
         self.frame_count += 1
         return goals_obstacles, goal_diff
 
     def relative_to_absolute_position(self, goals_obstacles):
         '''
-        Tranforms the relative position to absolute position and add the eroded border
+        Tranforms the relative position to absolute position and add the
+        eroded border
         '''
         for goal_rect, obstacles in zip(self.goal_rects, goals_obstacles):
             for obstacle in obstacles:
-                obstacle = (goal_rect[0]+obstacle[0]-5,
-                            goal_rect[1]+obstacle[1]-5,
-                            obstacle[2]+5, obstacle[3]+5)
+                obstacle = (goal_rect[0] + obstacle[0] - 5,
+                            goal_rect[1] + obstacle[1] - 5,
+                            obstacle[2] + 5, obstacle[3] + 5)
         return goals_obstacles
 
 
@@ -184,7 +199,6 @@ def main():
 
     # TODO make read() wait for a frame to be ready
     while grabbed:
-        t0 = time.time()
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         if replay_it:
             try:
@@ -203,7 +217,6 @@ def main():
         (grabbed, frame) = camera.read()
         if not replay_it:
             buf.store_next_frame((frame))
-        t4 = time.time()
         # print('{} grabbing, {} hsvconv, {} compute, {} displaying'
         #       .format(t4 - t3, t1 - t0, t2 - t1, t3 - t2))
 

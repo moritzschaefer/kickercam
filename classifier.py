@@ -9,20 +9,25 @@ import numpy as np
 import cv2
 from sklearn import svm
 
+i=0
+
 class Classifier:
     def __init__(self):
         pass
 
-    def extractFeatures(self, obs_cord, hsv_img, diff_img):
-        x = obs_cord[0]
-        y = obs_cord[1]
-        x_width = obs_cord[2]
-        y_width = obs_cord[3]
+    def extract_features(self, obs_cord, hsv_img, goal_rect, diff_img):
+        global i
+        goal_img = hsv_img[
+            goal_rect[1]:goal_rect[1] + goal_rect[3],
+            goal_rect[0]:goal_rect[0] + goal_rect[2]]
+        x, y, width, height = obs_cord
 
-        obstacle = hsv_img[x:x+x_width, y:y+y_width, :].copy()
+        obstacle = goal_img[y:y + height, x:x + width, :]
+        cv2.imwrite('balls/{}.jpg'.format(i), cv2.cvtColor(obstacle, cv2.COLOR_HSV2BGR))
         means = np.median(obstacle, axis=(0, 1))
         moments = np.asarray(cv2.moments(diff_img, binaryImage=True).values())
-        features = np.concatenate(([x_width, y_width], means, moments))
+        i+=1
+        features = np.concatenate(([width, height], means, moments))
         return features
     
     def train(self, data, label):
