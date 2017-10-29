@@ -4,6 +4,7 @@
 import numpy as np
 import cv2
 
+from classifier import Classifier
 from ringbuffer import Ringbuffer
 from config import WIDTH, HEIGHT
 
@@ -14,8 +15,9 @@ ALLOWED_DIFF = 40
 SEARCH_WIDTH = 250
 SEARCH_HEIGHT = 500
 GOAL_UPDATE_INTERVAL = 50
-MIN_OBSTACLE_LENGTH = 10
-DEBUG = True
+MIN_OBSTACLE_LENGTH = 20
+MAX_OBSTACLE_LENGTH = 60
+DEBUG = False
 
 
 class GoalDetector:
@@ -111,8 +113,10 @@ class GoalDetector:
                 # not important
                 rect = cv2.boundingRect(contours[i])  # x,y,w,h
                 if rect[2] > MIN_OBSTACLE_LENGTH and \
-                        rect[3] > MIN_OBSTACLE_LENGTH:
-                    obstacles.append(rect)
+                        rect[3] > MIN_OBSTACLE_LENGTH and \
+                        rect[2] < MAX_OBSTACLE_LENGTH and \
+                        rect[3] < MAX_OBSTACLE_LENGTH:
+                    obstacles.append(contours[i])
                     diff_img.append(diff)
                     if DEBUG:
                         cv2.imshow('obstacle', diff * 255)
@@ -152,14 +156,16 @@ class GoalDetector:
 
         for goal_rect, obstacles in zip(self.goal_rects, goals_obstacles):
             for obstacle in obstacles:
-                y = goal_rect[1] + obstacle[1]
-                x = goal_rect[0] + obstacle[0]
-                cv2.rectangle(
-                    hsv_img,
-                    (x - 5, y - 5),
-                    (x + obstacle[2] + 5, y + obstacle[3] + 5),
-                    (255, 0, 0),
-                    6)
+                if DEBUG:
+                    x, y, w, h = cv2.boundingRect(obstacle)
+                    y += goal_rect[1]
+                    x += goal_rect[0]
+                    cv2.rectangle(
+                        hsv_img,
+                        (x - 5, y - 5),
+                        (x + w + 5, y + h + 5),
+                        (255, 0, 0),
+                        6)
         self.frame_count += 1
         return goals_obstacles, goal_diff
 
@@ -184,7 +190,8 @@ def main():
     replay_it = None
 
     gd = GoalDetector()
-    videopath = './match1.h264'
+    classifier = Classifier('trainingdata')
+    videopath = './match2.h264'
     camera = cv2.VideoCapture(videopath)
     print(np.shape(camera))
 
@@ -209,8 +216,13 @@ def main():
             obs, _ = gd.step(hsv)
             resized = cv2.resize(hsv, (960, 540))
             cv2.imshow('window', resized)
-            if obs[0] or obs[1]:
-                replay_it = iter(buf)
+            for i, obstacles in enumerate(obs):
+                for obstacle in obstacles:
+                    if classifier.predict(obstacle, hsv, gd.goal_rects[i]):
+                        replay_it = iter(buf)
+                        break
+                if replay_it:
+                    break
 
         cv2.waitKey(1)  # need to wait for event loop and displaying...
 
