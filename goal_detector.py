@@ -3,6 +3,7 @@
 # each pipeline step always iteration over both goals
 import numpy as np
 import cv2
+import time
 
 from classifier import Classifier
 from ringbuffer import Ringbuffer
@@ -205,8 +206,11 @@ def main():
         camera.read()
 
     # TODO make read() wait for a frame to be ready
+    t0 = time.time()
     while grabbed:
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        t1 = time.time()
+
         if replay_it:
             try:
                 cv2.imshow('window', next(replay_it))
@@ -214,23 +218,35 @@ def main():
                 replay_it = None
         else:
             obs, _ = gd.step(hsv)
-            resized = cv2.resize(hsv, (960, 540))
-            cv2.imshow('window', resized)
+            t2 = time.time()
+            # resized = cv2.resize(hsv, (960, 540))
+            cv2.imshow('window', hsv)
+            t3 = time.time()
             for i, obstacles in enumerate(obs):
                 for obstacle in obstacles:
-                    if classifier.predict(obstacle, hsv, gd.goal_rects[i]):
+                    # if classifier.predict(obstacle, hsv, gd.goal_rects[i]):
+                    if False:
                         replay_it = iter(buf)
                         break
                 if replay_it:
                     break
+            t4 = time.time()
 
         cv2.waitKey(1)  # need to wait for event loop and displaying...
+        t5 = time.time()
 
         (grabbed, frame) = camera.read()
+        t6 = time.time()
+        # TODO speed up JPEG saving
         if not replay_it:
             buf.store_next_frame((frame))
+
+        t7 = time.time()
         # print('{} grabbing, {} hsvconv, {} compute, {} displaying'
         #       .format(t4 - t3, t1 - t0, t2 - t1, t3 - t2))
+        t = (t0, t1, t2, t3, t4, t5, t6, t7)
+        print([t[i] - t[i-1] for i in range(1, len(t))])
+        t0 = time.time()
 
     cv2.destroyAllWindows()
 
