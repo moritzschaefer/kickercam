@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Oct 10 00:30:24 2017
 
-@author: Marco
+@author: Moritz
 """
+import io 
 from collections import deque
 import numpy as np
 import cv2
-import goal_detector
+import scipy
+from image_processor import ProcessOutput
+from goal_detector import GoalDetector
 
 
 def main():
+    po = ProcessOutput()
+    gd = GoalDetector()
     i = 0
-    videopath = './match1.h264'
+    videopath = './match2.h264'
     camera = cv2.VideoCapture(videopath)
     print(np.shape(camera))
     (grabbed, frame) = camera.read()
@@ -21,18 +25,18 @@ def main():
     while grabbed:
         print("iteration", i)
 
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        goal_rects = goal_detector.detect_goals(hsv)
-        for rect in goal_rects:
-            cv2.rectangle(
-                hsv,
-                tuple(rect[:2]),
-                (rect[0] + rect[2], rect[1] + rect[3]),
-                (0, 0, 255), 6)
+        is_success, buf = cv2.imencode(".jpg", frame, params=[cv2.IMWRITE_JPEG_QUALITY, 99])
+        io_buf = io.BytesIO(buf)
 
+        #frame = cv2.imdecode(buf, cv2.IMREAD_COLOR)
+
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # gd.step(hsv)
+
+        po.write(io_buf.getvalue())
 
         cv2.imshow('image', hsv)
-        cv2.waitKey(0)
+        cv2.waitKey(1)
 
         (grabbed, frame) = camera.read()
         i += 1

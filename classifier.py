@@ -12,6 +12,7 @@ from sklearn import svm
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 from sklearn import preprocessing
+from sklearn.model_selection import train_test_split
 
 i = 0
 
@@ -129,3 +130,20 @@ class Classifier:
         features = self.extract_features(obstacle, hsv, goal_rect).reshape(1, -1)
 
         return self.clf.predict(self.scaler.transform(features))
+
+
+def main():
+    folder = "./trainingdata/"
+
+    features = np.loadtxt(folder + "Features.txt")
+    labels = np.loadtxt(folder + "Labels.txt")
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.33, random_state=42)
+
+    classifier = Classifier()
+    classifier.train(X_train, y_train, X_test, y_test)
+
+    classifier.dump(folder)
+
+
+if __name__ == "__main__":
+    main()

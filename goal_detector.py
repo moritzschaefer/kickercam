@@ -15,10 +15,10 @@ FPS = 42
 ALLOWED_DIFF = 40
 SEARCH_WIDTH = 250
 SEARCH_HEIGHT = 500
-GOAL_UPDATE_INTERVAL = 50
+GOAL_UPDATE_INTERVAL = 20
 MIN_OBSTACLE_LENGTH = 20
 MAX_OBSTACLE_LENGTH = 60
-DEBUG = False
+DEBUG = False # TODO
 
 
 class GoalDetector:
@@ -71,12 +71,12 @@ class GoalDetector:
                 print('Didnot find rectangle for search_x {}'.format(search_x))
                 raise ValueError("No Goals found in Image")
         if(np.sum(cv2.erode(
-                np.uint8(goal_img[0] > 35),
+                np.uint8(goal_img[0] > 50),
                 np.ones((9, 9), np.uint8)
-        )) > 15 or
+        )) > 30 or
                 np.sum(cv2.erode(
-                    np.uint8(goal_img[1] > 35),
-                    np.ones((9, 9), np.uint8))) > 15):
+                    np.uint8(goal_img[1] > 50),
+                    np.ones((9, 9), np.uint8))) > 30):
             raise ValueError("Probably something in the goal")
         return rects, goal_img
 
