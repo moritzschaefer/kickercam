@@ -2,6 +2,8 @@
 """
 Runs kickercam and goal detection etc
 
+Provide an argument if you want to simulate..
+
 """
 import random
 import picamera
@@ -10,10 +12,13 @@ import ipdb
 import numpy as np
 from time import sleep
 from signal import pause
+import sys
 
+import readstream
 from image_processor import ProcessOutput
 
 ONLY_PREVIEW = True
+
 
 def main():
     with picamera.PiCamera() as camera:
@@ -62,4 +67,8 @@ def main():
             camera.stop_preview()
 
 
-main()
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        readstream.main()  # this simply runs everything based on match2.h264 instead of the camera input. Good for testing/simulation
+    else:
+        main()
