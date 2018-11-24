@@ -4,7 +4,7 @@
 
 @author: Moritz
 """
-import io 
+import io
 from collections import deque
 import numpy as np
 import cv2

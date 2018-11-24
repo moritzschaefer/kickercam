@@ -45,6 +45,7 @@ class ImageProcessor(threading.Thread):
                     with self.owner.lock:
                         self.owner.pool.append(self)
 
+
 class ProcessOutput(object):
     def __init__(self):
         self.done = False

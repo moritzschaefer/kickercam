@@ -31,7 +31,7 @@ def main():
             pause()
 
         stream = picamera.PiCameraCircularIO(camera, seconds=7)
-        camera.start_recording(stream,'h264')  # TODO use mjpeg!
+        camera.start_recording(stream,'mjpeg')  
         output = ProcessOutput()
         camera.start_recording(output,'mjpeg', splitter_port=2)
 
@@ -42,11 +42,11 @@ def main():
                     output.detected = False
                     camera.stop_recording(splitter_port=2)
                     camera.stop_recording()
-                    stream.copy_to('motion.h264')
+                    stream.copy_to('motion.mjpeg')
                     camera.stop_preview()
                     cv2.namedWindow('replay', cv2.WINDOW_NORMAL)
                     cv2.setWindowProperty('replay',cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
-                    cap = cv2.VideoCapture('motion.h264')
+                    cap = cv2.VideoCapture('motion.mjpeg')
                     try:
                         while(cap.isOpened()):
                             ret, frame = cap.read()
@@ -58,7 +58,7 @@ def main():
                     finally:
                         cv2.destroyAllWindows()
                     camera.start_preview()
-                    camera.start_recording(stream,'h264')
+                    camera.start_recording(stream,'mjpeg')
                     camera.start_recording(output,'mjpeg', splitter_port=2)
         finally:
             camera.stop_recording()
