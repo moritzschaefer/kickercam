@@ -2,6 +2,8 @@
 
 Foosball (Kicker, Tablesoccer) live camera with goal detection and slow-motion replay
 
+python3 main2.py starts the camera and outputs to a Monitor. Replay is Implemented but currently not used.  
+
 # train
 
 python3 classifier.py
