@@ -14,7 +14,7 @@ def mousePosition(event,x,y,flags, passed_param):
     global pos, go_back, delay
     if event == cv2.EVENT_MOUSEMOVE:
         # print(x,y)
-        pos = (x,y)
+        pos = (x, y)
     elif event == cv2.EVENT_LBUTTONDOWN:
         go_back = True
     elif event == cv2.EVENT_MBUTTONDOWN:
@@ -53,11 +53,11 @@ def label(filename):
 
         if key == ord('q'):
             break
-        elif key == ord('n'):
-            pass
+        elif key == ord('u'):
+            pos = (-1, -1)
         elif key == ord('j'):
             delay *= 1.5
-        elif key == ord('k'):
+        elif key == ord('d'):  # faster
             delay /= 1.5
         elif key == ord('h') or go_back:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_pos - 40)
@@ -84,4 +84,4 @@ def label(filename):
 
 if __name__ == '__main__':
     ball_pos = label('output.mp4')
-    pd.DataFrame({'x': [v[0]  if v else None for v in ball_pos], 'y': [v[1]  if v else None for v in ball_pos]})
+    pd.DataFrame({'x': [v[0]  if v else None for v in ball_pos], 'y': [v[1]  if v else None for v in ball_pos]}).to_csv('label.csv')
