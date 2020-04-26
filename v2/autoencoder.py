@@ -54,7 +54,7 @@ class Autoencoder():
     def weighted_mse(self, y_true, y_pred):
         std = tf.math.reduce_std(y_true,axis=[0])
         print(tf.shape(std))
-        return tf.reduce_mean(std * tf.square(y_true - y_pred))
+        return tf.reduce_mean(5 * std * tf.square(y_true - y_pred))
 
     def _make_model(self, l1_reg=0.0001):
         """Creates a Neural Net"""
@@ -116,6 +116,10 @@ class Autoencoder():
 
         callbacks_list = [checkpoint, tensorboard_callback]
 
+        #normalize Data
+        self.mean_X = np.mean(X, axis=0)
+
+        X = X - self.mean_X
         # Fit the model
         self.loss_weight = loss_weights
         self.autoencoder.fit(X, X, batch_size=batchsize, epochs=num_episode, callbacks=callbacks_list)
