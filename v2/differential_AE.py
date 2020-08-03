@@ -48,9 +48,16 @@ class Differential_AE(nn.Module):
         rest_shape = input_dim[1] // 2**(2*n_layer)
         pos_net.append(nn.Linear(rest_shape**2*cur_dim,cur_dim))
         pos_net.append(nn.Linear(cur_dim,6))
-
+        self.pos_net = nn.Sequential(*pos_net)
 
     def forward(self, x):
-        pass
+        low = self.down_net(x)
+        recons = self.up_net(low)
+        pos = self.pos_net(low)
+        return recons, pos, low
+
+
+def train(x,y):
+    pass
 
 
