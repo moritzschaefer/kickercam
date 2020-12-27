@@ -1,5 +1,7 @@
 # kickercam
 
+New version in "jetson". Test rest sux
+
 Foosball (Kicker, Tablesoccer) live camera with goal detection and slow-motion replay
 
 python3 main2.py starts the camera and outputs to a Monitor. Replay is Implemented but currently not used.  
