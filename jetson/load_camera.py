@@ -1,21 +1,26 @@
 import cv2
 
+class Camera_Loader:
+    def __init__(self, width=1280, height=720,fps=60, filename = None):
+        if filename:
+            self.cap = cv2.VideoCapture(filename)
+        else:
+            self.cap = cv2.VideoCapture(
+            "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int){}, height=(int){}, format=(string)NV12, framerate=(fraction){}/1  ! nvvidconv flip-method=0   !  appsink".format(width,height,fps),
+            cv2.CAP_GSTREAMER)
+        if not self.cap.isOpened():
+            raise RuntimeError("Camera is not open")
 
-def load_camera():
-    cap = cv2.VideoCapture("nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)1280, height=(int)720, format=(string)NV12, framerate=(fraction)60/1  ! nvvidconv flip-method=0   !  appsink", cv2.CAP_GSTREAMER)
-    #cap = cv2.VideoCapture("nvarguscamerasrc ! width={width}, height={height}, nvvidconv flip-method=0   !  appsink".format(width=640, height=480), cv2.CAP_GSTREAMER)
-    # Capture frame-by-frame
-    if not cap.isOpened():
-        raise RuntimeError("cap is not open")
-    return cap
+    def get_image(self):
+        """
+        returns: tuple, (cv2 return, image)
+        """
+        return self.cap.read()
 
+    def __del__(self):
+        self.cap.release()
 
-    #while True:
-        #ret, frame = cap.read()
-        ##gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        #cv2.imshow('frame',frame)
-        #if cv2.waitKey(1) & 0xFF == ord('q'):
-            #break
-#
-    #cap.release()
-    #cv2.destroyAllWindows()
+    def display_image(self):
+        ret, frame = self.cap.read()
+        cv2.imshow('frame', frame)
+
