@@ -1,6 +1,8 @@
 # kickercam
 
-New version in "jetson". Test rest sux
+New version in "jetson". The rest sux.
+Jetson IP: 192.168.178.111, VNC password: password (connect with tightvnc client, or similar).
+
 
 Foosball (Kicker, Tablesoccer) live camera with goal detection and slow-motion replay
 
