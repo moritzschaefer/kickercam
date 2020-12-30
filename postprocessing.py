@@ -14,8 +14,17 @@ RESIZE = 1  # set to 1 to disable scaling
 SHOW_BALL_LABEL = True
 running = True
 # 6800 -> 7250
+mouse_pos = (-1,-1)
+def mousePosition(event, x, y, flags, passed_param):
+    global mouse_pos, drop_last, delay, track_point
+    if event == cv2.EVENT_MOUSEMOVE:
+        # print(x,y)
+        mouse_pos = (x, y)
+
+
 def show_labels(video_fn, label_fn, window_size = 30):
-    global running
+    global running, mouse_pos
+
     delay = 8
     vr = VideoReader(video_fn)
     cv2.namedWindow('Frame') 
@@ -25,6 +34,7 @@ def show_labels(video_fn, label_fn, window_size = 30):
     df['x'] = df['x'].astype(int)
     df['y'] = df['y'].astype(int)
 
+    cv2.setMouseCallback('Frame', mousePosition)
     ball_pos = []
     # Read until video is completed
     frame_pos = -1
@@ -51,9 +61,13 @@ def show_labels(video_fn, label_fn, window_size = 30):
                 past = df.loc[max(frame_pos - window_size + i, 0)]
                 past_point = (int(past['x'] * RESIZE), int(past['y'] * RESIZE))
                 cv2.circle(frame, past_point,  3, (0, 0, 255), 3)
-            past_point = (int(df.loc[max(frame_pos-window_size,0)]['x'] * RESIZE), int(df.loc[max(frame_pos-window_size,0)]['y'] * RESIZE))
-            cv2.line(frame, point, past_point, (0, 255, 0), math.ceil(4*RESIZE))
-            cv2.circle(frame, point, math.ceil(5*RESIZE), (0, 0, 255), math.ceil(8*RESIZE))
+            for i in range(window_size):
+                future = df.loc[min(frame_pos + window_size - i, df.index[-1])]
+                future_point = (int(future['x'] * RESIZE), int(future['y'] * RESIZE))
+                cv2.circle(frame, future_point, 3, (255, 0, 0), 3)
+            #past_point = (int(df.loc[max(frame_pos-window_size,0)]['x'] * RESIZE), int(df.loc[max(frame_pos-window_size,0)]['y'] * RESIZE))
+            #cv2.line(frame, point, past_point, (0, 255, 0), math.ceil(4*RESIZE))
+            cv2.circle(frame, point, math.ceil(5*RESIZE), (0, 255, 0), math.ceil(8*RESIZE))
 
         # Display the resulting frame
         cv2.imshow('Frame', frame)
@@ -64,10 +78,37 @@ def show_labels(video_fn, label_fn, window_size = 30):
 
         if key == ord('q'):
             break
+        elif key == ord('r'):
+
+            df.index = df.index.map(lambda i: i if i < vr.next_frame else i + 1)
+            df.loc[vr.next_frame] = {"x": mouse_pos[0], "y": mouse_pos[1]}
+            df.sort_index(inplace=True)
+            frame = vr.read_next()
+        elif key == ord('f'):
+            df.drop(index=vr.next_frame, inplace=True)
+            df.index = df.index.map(lambda i: i if i <= vr.next_frame else i - 1)
+
         elif key == ord('j'):  # slower
             delay *= 1.5
         elif key == ord('k'):  # faster
             delay /= 1.5
+        elif key == ord('n'):
+            try:
+                frame = vr.read_next()
+            except StopIteration:
+                break
+        elif key == ord('b'):
+            vr.jump_back(2)
+            try:
+                frame = vr.read_next()
+            except StopIteration:
+                break
+        elif key == ord('u'):
+            df.index = df.index.map(lambda i: i if i < vr.next_frame else i + 1)
+            df.loc[vr.next_frame] = {"x": -1, "y": -1}
+            df.sort_index(inplace=True)
+            frame = vr.read_next()
+
         elif key == ord('h'):
             vr.jump_back(50)
             try:
@@ -88,7 +129,7 @@ def show_labels(video_fn, label_fn, window_size = 30):
             running = not running
     # When everything done, release the video capture object
     vr.cap.release()
-
+    df.to_csv(label_fn.replace(".csv", "_corrected.csv"))
     # Closes all the frames
     cv2.destroyAllWindows()
 

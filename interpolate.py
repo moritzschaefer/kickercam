@@ -13,7 +13,7 @@ def interpolate(df):
         except:
             break
         if isinstance(df.loc[index, 'x'], np.int64) and df.loc[index, 'x'] >= 0 and \
-            isinstance(df.loc[index2, 'x'], np.int64) and df.loc[index2, 'x']:
+            isinstance(df.loc[index2, 'x'], np.int64) and df.loc[index2, 'x'] >= 0:
             interpolate_df.loc[index:index2, 'x'] = np.linspace(df.loc[index, 'x'], df.loc[index2, 'x'],
                                                                 num=1+index2-index, endpoint=True)
             interpolate_df.loc[index:index2, 'y'] = np.linspace(df.loc[index, 'y'], df.loc[index2, 'y'],
@@ -23,8 +23,8 @@ def interpolate(df):
 
 if __name__ == '__main__':
     ap = argparse.ArgumentParser()
-    ap.add_argument('input-file', metavar='input')
-    ap.add_argument('output-file', metavar='output')
+    ap.add_argument('input', type=str)
+    ap.add_argument('output', type=str)
     args = ap.parse_args(sys.argv[1:])
 
 
