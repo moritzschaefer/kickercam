@@ -7,20 +7,17 @@ import argparse
 import sys
 import collections
 
+from video_reader import VideoReader
+
+
 RESIZE = 1  # set to 1 to disable scaling
 SHOW_BALL_LABEL = True
-
+running = True
 # 6800 -> 7250
 def show_labels(video_fn, label_fn, window_size = 30):
-
+    global running
     delay = 8
-    cap = cv2.VideoCapture(video_fn)
-
-    # Check if camera opened successfully
-    if cap.isOpened() == False: 
-        print("Error opening video stream or file")
-
-
+    vr = VideoReader(video_fn)
     cv2.namedWindow('Frame') 
     print(label_fn)
     df = pd.read_csv(label_fn)
@@ -31,17 +28,17 @@ def show_labels(video_fn, label_fn, window_size = 30):
     ball_pos = []
     # Read until video is completed
     frame_pos = -1
-    while cap.isOpened() and frame_pos + 2 < len(df):
-        frame_pos = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+    while vr.is_opened() and frame_pos + 2 < len(df):
+        frame_pos = vr.next_frame
         #cap.set(cv2.CAP_PROP_POS_FRAMES, frame_pos)
-        if frame_pos % 50 == 0:
-            print(frame_pos)
-        # Capture frame-by-frame
-        ret, frame = cap.read()
-        if int(cap.get(cv2.CAP_PROP_POS_FRAMES)) - frame_pos != 1:
-            import pdb; pdb.set_trace()
-        if ret is not True:
-            break
+        if running:
+            if frame_pos % 50 == 0:
+                print(frame_pos)
+            # Capture frame-by-frame
+            try:
+                frame = vr.read_next()
+            except StopIteration:
+                break
 
         if RESIZE and RESIZE != 1:
             frame = cv2.resize(frame, None, fx=RESIZE, fy=RESIZE)
@@ -71,12 +68,26 @@ def show_labels(video_fn, label_fn, window_size = 30):
             delay *= 1.5
         elif key == ord('k'):  # faster
             delay /= 1.5
-        elif key == ord('b'):  # back
-            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0,frame_pos-10))
-        elif key == ord('B'):  # back 100
-            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, frame_pos - 100))
+        elif key == ord('h'):
+            vr.jump_back(50)
+            try:
+                frame = vr.read_next()
+            except StopIteration:
+                break
+            cv2.imshow('Frame', frame)
+            cv2.waitKey(100)
+        elif key == ord('g'):
+            vr.jump_back(150)
+            try:
+                frame = vr.read_next()
+            except StopIteration:
+                break
+            cv2.imshow('Frame', frame)
+            cv2.waitKey(100)
+        elif key == ord(" "):  # pause
+            running = not running
     # When everything done, release the video capture object
-    cap.release()
+    vr.cap.release()
 
     # Closes all the frames
     cv2.destroyAllWindows()

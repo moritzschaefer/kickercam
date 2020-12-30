@@ -88,6 +88,12 @@ def label(filename, start_frame=0, ball_pos=None):
             delay /= 1.5
         elif key == ord('h'):
             vr.jump_back(50)
+            try:
+                frame = vr.read_next()
+            except StopIteration:
+                break
+            cv2.imshow('Frame', frame)
+            cv2.waitKey(100)
         elif key == ord('g'):
             vr.jump_back(150)
             try:
