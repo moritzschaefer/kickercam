@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import math
 
 import cv2
@@ -32,10 +33,13 @@ def show_labels(video_fn, label_fn, window_size = 30):
     frame_pos = -1
     while cap.isOpened() and frame_pos + 2 < len(df):
         frame_pos = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+        #cap.set(cv2.CAP_PROP_POS_FRAMES, frame_pos)
         if frame_pos % 50 == 0:
             print(frame_pos)
         # Capture frame-by-frame
         ret, frame = cap.read()
+        if int(cap.get(cv2.CAP_PROP_POS_FRAMES)) - frame_pos != 1:
+            import pdb; pdb.set_trace()
         if ret is not True:
             break
 
@@ -68,9 +72,9 @@ def show_labels(video_fn, label_fn, window_size = 30):
         elif key == ord('k'):  # faster
             delay /= 1.5
         elif key == ord('b'):  # back
-            cap.set(cv2.CAP_PROP_POS_FRAMES, max(1,frame_pos-10))
+            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0,frame_pos-10))
         elif key == ord('B'):  # back 100
-            cap.set(cv2.CAP_PROP_POS_FRAMES, max(1, frame_pos - 100))
+            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, frame_pos - 100))
     # When everything done, release the video capture object
     cap.release()
 
