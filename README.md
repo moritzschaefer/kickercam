@@ -51,3 +51,14 @@ Right now we use h264 for the circular replay buffer and mjpeg for the analysis.
 Right now only multithreading is used (python does not have real multithreading and only and core is used at a time). Use multiprocessing in order to use all kernels...
 
 ##
+
+
+# Dataset preprocessing
+
+Data was generated using Jetson with blabla camera and command gst-launch...
+
+Afterwards, files were post processed using 
+
+ffmpeg -i trainingdata/third.h265 -err_detect aggressive -fflags discardcorrupt -vcodec h264 -crf 21 third.avi
+
+in order to drop corrupted frames, recorded by the camera/jetson.
