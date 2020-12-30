@@ -40,9 +40,10 @@ class VideoReader:
             self.show_again -= 1
         else:
             ret, frame = self.cap.read()
-            self.ringbuffer[self.next_frame % BUFFER_LENGTH] = frame.copy()
             if not ret:
                 raise StopIteration
+
+            self.ringbuffer[self.next_frame % BUFFER_LENGTH] = frame.copy()
 
         self.next_frame += 1
 

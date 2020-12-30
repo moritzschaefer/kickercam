@@ -33,7 +33,7 @@ def mousePosition(event, x, y, flags, passed_param):
 
 
 
-def label(filename, start_frame=0, ball_pos=None):
+def label(filename, start_frame=0, ball_pos=None, label_file="labels.csv"):
 
     global pos, drop_last, delay, track_point, running
     ball_pos = ball_pos.sort_index()
@@ -57,7 +57,8 @@ def label(filename, start_frame=0, ball_pos=None):
         if running:
             if vr.next_frame % 50 == 0:
                 print(vr.next_frame)
-
+            if vr.next_frame % 5000 == 0:
+                ball_pos.to_csv(label_file)
             # Capture frame-by-frame
             try:
                 frame = vr.read_next()
@@ -162,7 +163,7 @@ if __name__ == '__main__':
 
     if not args.start_frame:
         pass
-    ball_pos = label(args.input_video, args.start_frame, pre_ball_pos)
+    ball_pos = label(args.input_video, args.start_frame, pre_ball_pos, label_file)
 
     ball_pos.to_csv(label_file)
 
