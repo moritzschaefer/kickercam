@@ -14,6 +14,14 @@ Foosball (Kicker, Tablesoccer) live camera with goal detection and slow-motion r
 
 python3 main2.py starts the camera and outputs to a Monitor. Replay is Implemented but currently not used.  
 
+# Installation
+
+To run the labeler scripts the following libraries are required:
+
+- python3 (3.7 or higher)
+- python3-opencv
+- pandas
+
 # Dataset
 
 More information in doc/DATASET.md
