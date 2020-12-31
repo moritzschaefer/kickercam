@@ -6,6 +6,7 @@
 - Only analyze a half to a third of the image (256->144 -> 96 x 54 or 128x64.), centered around the last known ball position
 - When last ball position is unknown, scan the whole image (6 to 9 tiles)
 - Use MobileNet and transfer learning of last layer(s) to detect ball (and maybe blue and red players)
+- Use Depth-Wise Convolution to save around 80% computations/parameters  (3x3 conv filter wise followed by 1x1 conv intra-filter)
 
 ## Wish: 
 
