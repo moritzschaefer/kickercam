@@ -20,3 +20,6 @@ https://www.sciencedirect.com/science/article/abs/pii/S123034021830146X
 https://towardsdatascience.com/detecting-soccer-palyers-and-ball-retinantet-2ab5f997ab2
 
 https://github.com/SteveMacenski/jetson_nano_detection_and_tracking <- mobilenet with 
+
+# Convert pytorch to TensorRT (6x speed-up)
+https://www.learnopencv.com/how-to-convert-a-model-from-pytorch-to-tensorrt-and-speed-up-inference/
