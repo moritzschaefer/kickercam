@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     label_file = args.label_file
     if not label_file:
-        label_file = args.input_video + '_labels.csv'
+        label_file = args.input_video + '.csv'
     try:
         pre_ball_pos = pd.read_csv(label_file, index_col=0).apply(lambda row: (row['x'], row['y']),
                                                      axis=1).tolist()
