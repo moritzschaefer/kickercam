@@ -1,60 +1,23 @@
 # kickercam
 
+This repository contains code for several tasks related to, ball tracking and slow-motion replay of a foosball game.
+The project aims to realize the following tasks:
+
+- Recording and labeling of ball position
+- Algorithm to detect the position of a ball in the game
+- Camera live view with goal detection and slow-motion replay of the shot
+
 New version in "jetson". The rest sux.
 Jetson IP: 192.168.178.111, VNC password: password (connect with tightvnc client, or similar).
-
 
 Foosball (Kicker, Tablesoccer) live camera with goal detection and slow-motion replay
 
 python3 main2.py starts the camera and outputs to a Monitor. Replay is Implemented but currently not used.  
 
-
 # Dataset
 
 More information in doc/DATASET.md
 
-# train
+# Hardware
 
-python3 classifier.py
-
-trains and saves the model. Note that classifier.py is also used for predictions (see main.py)
-
-
-# TODOs
-
-If you apply all these TODOs it will work perfectly!
-
-## Add heat sink
-
-It's getting to hot with the analysis
-
-Add a heat sink to the raspberry chip (we should still have some). Furthermore add a small fan!
-
-
-## adjust cam and cut out field area
-
-Center the image. Use hotglue on the camera and adjust it perfectly. make sure the pi sits still as well
-
-There is an option to cut out (and zoom) an area of the capture frame.
-Look here for zoom:
-https://picamera.readthedocs.io/en/release-1.13/api_camera.html?highlight=zoom
-
-## After cutting the stream as indicated above, it should be possible to increase the frame rate to about 42 FPS (which is enough for a cool slowmo already).
-
-Increase the FPS until the program crashes
-
-# Use different resolutions
-
-We can use the full 1600x1200 for the preview (and replay) and use 600x480 for the image processing to speed up everything
-
-# video formats
-
-Right now we use h264 for the circular replay buffer and mjpeg for the analysis. It's probably faster to use the same codec for both (we NEED mjpeg for the analysis).
-
-## use real multiprocessing
-
-Right now only multithreading is used (python does not have real multithreading and only and core is used at a time). Use multiprocessing in order to use all kernels...
-
-##
-
-
+Nvidia Jetson nano (4GB RAM) with Waveshare IMX219-160 camera.
