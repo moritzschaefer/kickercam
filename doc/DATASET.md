@@ -12,4 +12,6 @@ There are 4 video files called v1 to v4. v1 was recorded using a GoPro camera wi
 The command to record the videos v2, v3 and v4 was
 gst-launch ... TODO
 
+In order to download the videos, TODO
+
 The ball positions were labeled manually, as described in doc/LABELING.md.
