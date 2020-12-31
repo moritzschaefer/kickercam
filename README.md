@@ -8,6 +8,11 @@ Foosball (Kicker, Tablesoccer) live camera with goal detection and slow-motion r
 
 python3 main2.py starts the camera and outputs to a Monitor. Replay is Implemented but currently not used.  
 
+
+# Dataset
+
+More information in doc/DATASET.md
+
 # train
 
 python3 classifier.py
@@ -53,12 +58,3 @@ Right now only multithreading is used (python does not have real multithreading 
 ##
 
 
-# Dataset preprocessing
-
-Data was generated using Jetson with blabla camera and command gst-launch...
-
-Afterwards, files were post processed using 
-
-ffmpeg -i trainingdata/third.h265 -err_detect aggressive -fflags discardcorrupt -vcodec h264 -crf 21 third.avi
-
-in order to drop corrupted frames, recorded by the camera/jetson.
