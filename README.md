@@ -22,6 +22,17 @@ To run the labeler scripts the following libraries are required:
 - python3-opencv
 - pandas
 
+For the modeling part:
+
+- pytorch
+- torchvision
+- cudatoolkit
+
+
+You can use conda/mamba:
+
+mamba install pandas opencv pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -c conda-forge
+
 # Dataset
 
 More information in doc/DATASET.md
