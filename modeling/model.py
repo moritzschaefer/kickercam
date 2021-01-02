@@ -9,9 +9,9 @@ Adopted from https://github.com/tonylins/pytorch-mobilenet-v2/blob/master/Mobile
 '''
 
 import math
-
+import torch
 import torch.nn as nn
-
+import numpy as np
 
 def conv_bn(inp, oup, stride):
     return nn.Sequential(
@@ -22,6 +22,7 @@ def conv_bn(inp, oup, stride):
 
 
 def conv_1x1_bn(inp, oup):
+    # TODO replace batchnorm with instance norm?
     return nn.Sequential(
         nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
         nn.BatchNorm2d(oup),
@@ -76,28 +77,26 @@ class InvertedResidual(nn.Module):
 
 
 class KickerNet(nn.Module):
-    def __init__(self, input_size=(256, 128), width_mult=1.):
+    def __init__(self, input_size=(256, 144), width_mult=1.):
         super(KickerNet, self).__init__()
         block = InvertedResidual
         input_channel = 32
-        last_channel = 1280
+        last_channel = 16
         interverted_residual_setting = [
             # t, c, n, s
             [1, 16, 1, 1],
             [6, 24, 2, 2],
             [6, 32, 3, 2],
-            [6, 64, 4, 2],
-            [6, 96, 3, 1],
-            [6, 160, 3, 2],
-            [6, 320, 1, 1],
+            [6, 32, 4, 2],
+            [6, 16, 4, 2],
         ]
-
+        downscaling_factor = np.prod([s for _, _, _, s in interverted_residual_setting])
+        self.last_channel = (input_size[0] * input_size[1]) // downscaling_factor**2 * interverted_residual_setting[-1][1]
         # building first layer
-        assert input_size[0] % 32 == 0
-        assert input_size[1] % 32 == 0
+        assert input_size[0] % downscaling_factor == 0
+        assert input_size[1] % downscaling_factor == 0
         # input_channel = make_divisible(input_channel * width_mult)  # first channel is always 32!
-        self.last_channel = make_divisible(last_channel * width_mult) if width_mult > 1.0 else last_channel
-        self.features = [conv_bn(3, input_channel, 2)]
+        self.features = [conv_bn(3, input_channel, 1)]
         # building inverted residual blocks
         for t, c, n, s in interverted_residual_setting:
             output_channel = make_divisible(c * width_mult) if t > 1 else c
@@ -107,23 +106,27 @@ class KickerNet(nn.Module):
                 else:
                     self.features.append(block(input_channel, output_channel, 1, expand_ratio=t))
                 input_channel = output_channel
-        # building last several layers
-        self.features.append(conv_1x1_bn(input_channel, self.last_channel))
+        #self.features.append(nn.Conv2d(input_channel, input_channel))
         # make it nn.Sequential
         self.features = nn.Sequential(*self.features)
 
         # building classifier
-        self.classifier = nn.Linear(self.last_channel, 2)  # predict whether a ball is visible or not
-        self.regressor = nn.Linear(self.last_channel, 2)  # predict the (x, y) ball position
+        #self.classifier = nn.Linear(self.last_channel, 2)  # predict whether a ball is visible or not
+        self.classifier = nn.Linear(input_channel, 1)  # predict whether a ball is visible or not
+        self.regressor = nn.Linear(self.last_channel, 4)  # predict the (x, y) ball position
 
         self._initialize_weights()
 
     def forward(self, x):
         x = self.features(x)
-        x = x.mean(3).mean(2)
-        ball_visible = self.classifier(x)
+        pooled_x = torch.max(torch.max(x, 3).values, 2).values
+        x = x.view(-1, self.last_channel)
+        ball_visible = self.classifier(pooled_x)
+
         ball_pos = self.regressor(x)
-        return self.ball_visible, ball_pos
+        mean_pos, var_pos = torch.chunk(ball_pos, chunks=2, dim=1)
+        var_pos = nn.functional.softplus(var_pos)
+        return ball_visible, mean_pos, var_pos
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -139,6 +142,20 @@ class KickerNet(nn.Module):
                 n = m.weight.size(1)
                 m.weight.data.normal_(0, 0.01)
                 m.bias.data.zero_()
+
+
+
+class Variational_L2_loss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, loc, target, scale=None):
+        if scale is None:
+            loc, scale = torch.chunk(loc, 2, 1)
+        # print("Variational Input", torch.mean(loc), torch.mean(scale))
+        # print("Variational loss", torch.mean((loc-target)**2 / (scale + 10**-4) + torch.log(scale + 10**-4)))
+        return torch.mean((loc - target) ** 2 / (scale + 10 ** -4) + torch.log((scale + 10 ** -4)), dim=1)# ** 2))
+
 
 
 if __name__ == '__main__':
