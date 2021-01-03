@@ -34,13 +34,14 @@ def get_image(video):
     assert ok, "Could not read video"
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    lower_b = np.array([0,0,80])
+    lower_b = np.array([0,0,50])
     upper_b = np.array([255,100,255])
     # Threshold the HSV image to get only blue colors
     mask = cv2.inRange(hsv, lower_b, upper_b)
     # Bitwise-AND mask and original image
     frame = cv2.bitwise_and(frame,frame, mask= mask)
-    scale=.2
+    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    scale=1
     frame = cv2.resize(frame,(int(1280*scale),int(720*scale)))
     return frame
 
@@ -50,7 +51,7 @@ def try_tracking():
     # Instead of MIL, you can also use
 
     # Read video
-    video = cv2.VideoCapture("dataset/v2.h265")
+    video = cv2.VideoCapture("dataset/v3.h265")
 
     # Exit if video not opened.
     if not video.isOpened():
@@ -176,7 +177,7 @@ def get_optical_flow_edges():
         p0 = good_new.reshape(-1, 1, 2)
 
 def get_optical_flow_all():
-    cap = cv2.VideoCapture("dataset/v2.h265")
+    cap = cv2.VideoCapture("dataset/v4.h265")
     ret, frame1 = cap.read()
     prvs = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
     hsv = np.zeros_like(frame1)

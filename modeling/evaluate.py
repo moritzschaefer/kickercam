@@ -17,24 +17,22 @@ def load_checkpoint(file_path, use_cuda=False):
     return model
 
 
+
 def frame_to_tensor(frame):
     """
-    frame: A numpy frame of shape (W,H,C)
+    frame: A list of numpy frame of shape ( W,H,C)
 
-    returns: A normalized Tensor of shape (1,C,W,H)
+    returns: A normalized Tensor of shape (C,W,H)
     """
-    print("Input Shape of Frame: ", np.shape(frame))
+    frame = cv2.resize(frame, (256, 144))
 
-
-    frame = cv2.resize(frame,(256, 144))
-
-    frame = np.swapaxes(np.swapaxes(frame, 0, 2),1,2) #Rearange to C,W,H
-    frame = np.expand_dims(frame,axis=0)
-    frame /= 255.
+    frame = frame.T #Rearange to C,W,H
+    #frame = np.expand_dims(frame, axis=0)
+    frame = frame / 255.
     tensor_frame = torch.Tensor(frame)
 
-    print("Transformed Shape of Frame: ", tensor_frame.shape)
     return(tensor_frame)
+
 def normalize_pos(pos):
     m_x, sd_x = 639.5, 369.5040595176188
     m_y, sd_y = 359.5, 207.84589643932512
@@ -50,6 +48,7 @@ def denormalize_pos(pos):
 def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmodel_best.pth.tar", display=True):
     window_size = 20
     delay = 8
+    running = True
     #TODO Load data
     vr = video_reader.VideoReader(dataset)
 
@@ -74,8 +73,9 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
                 break
 
 
-            frame_tensor = frame_to_tensor(frame)
+            frame_tensor = torch.unsqueeze(frame_to_tensor(frame),0)
             ball_visible, pos, var_pos = model(frame_tensor)
+            print("ball_visible : {}, Pos: {},  Var_pos: {}".format(ball_visible, pos, var_pos))
             pos = denormalize_pos(pos.detach().cpu().numpy()[0])
             ball_pos.loc[vr.next_frame] = {"x": pos[0], "y": pos[1]}
 
@@ -84,9 +84,9 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
         if display:
             point = pos
             for i in range(window_size):
-                past = ball_pos.loc[max(frame_pos - window_size + i, 0)]
+                past = ball_pos.loc[max(frame_pos - window_size + i, 1)]
                 past_point = (int(past['x']), int(past['y']))
-                cv2.circle(frame, past_point,  3, (0, 0, 255), 3)
+                cv2.circle(frame, past_point,  3, (0, 255, 0), 3)
             cv2.circle(frame, point, 5, (0, 0, 255), 8)
 
             # Display the resulting frame
@@ -110,3 +110,8 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
     if display:
         # Closes all the frames
         cv2.destroyAllWindows()
+
+
+
+if __name__ == '__main__':
+    evaluate()
