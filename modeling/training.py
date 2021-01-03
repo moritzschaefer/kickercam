@@ -20,35 +20,42 @@ BATCH_SIZE = 20
 
 def main():
     net = KickerNet()
-    dl = DataLoader("../dataset/v2.h265", "../dataset/v2.h265.csv")
+
+    #dl = DataLoader("../dataset/v2.h265", "../dataset/v2.h265.csv")
+    dl = DataLoader("../dataset/v2grey.npz", "../dataset/v2.h265.csv")
 
     # create your optimizer
     #optimizer = optim.SGD(net.parameters(), lr=0.001)
     optimizer = optim.Adam(net.parameters(), lr=0.001)
     losses = []
     NLL_loss = Variational_L2_loss()
+    MSE_loss = torch.nn.MSELoss(reduction='none')
     BCE_loss = torch.nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([0.05]))
     for epoch in range(NUM_EPOCHS):
+        iteration = 0
         while dl.running_epoch:
             mini_batch, label = dl.get_batch(BATCH_SIZE)
 
             visible = torch.unsqueeze((label[:,0]>-90).type(dtype=torch.float32), 1)
             # in your training loop:
             optimizer.zero_grad()   # zero the gradient buffers
-            ball_visible, mean_pos, var_pos = net.forward(mini_batch)
+            #ball_visible, mean_pos, var_pos = net.forward(mini_batch)
+            #pos_loss = torch.mean(NLL_loss(mean_pos, label, var_pos) * visible)
+            ball_visible, mean_pos= net.forward(mini_batch)
+            pos_loss = torch.mean(MSE_loss(mean_pos, label) * visible)
 
-            pos_loss = torch.mean(NLL_loss( mean_pos, label, var_pos) * visible)
 
-            print(torch.mean(ball_visible), torch.mean(visible))
+            #print(torch.mean(ball_visible), torch.mean(visible))
             visible_loss = BCE_loss(ball_visible, visible)
 
             loss = pos_loss + 20*visible_loss
             loss.backward()
             optimizer.step()    # Does the update
             losses.append(( 20*visible_loss.detach().cpu().numpy(), pos_loss.detach().cpu().numpy()))
-        dl.running_epoch=True
-        print('Train Epoch: {} BCELOSS : {:.6f} \t POSLoss: {:.3f}'.format(
-            epoch, 20*visible_loss, pos_loss))
+            print('Train Epoch: {}:{} BCELOSS : {:.6f} \t POSLoss: {:.3f}'.format(
+                epoch, iteration, 20 * visible_loss, pos_loss))
+            iteration += 1
+        dl.running_epoch = True
 
         save_checkpoint({
             'state_dict': net.state_dict(),

@@ -80,7 +80,7 @@ class KickerNet(nn.Module):
     def __init__(self, input_size=(256, 144), width_mult=1.):
         super(KickerNet, self).__init__()
         block = InvertedResidual
-        input_channel = 32
+        input_channel = 16
         last_channel = 16
         interverted_residual_setting = [
             # t, c, n, s
@@ -96,7 +96,7 @@ class KickerNet(nn.Module):
         assert input_size[0] % downscaling_factor == 0
         assert input_size[1] % downscaling_factor == 0
         # input_channel = make_divisible(input_channel * width_mult)  # first channel is always 32!
-        self.features = [conv_bn(3, input_channel, 1)]
+        self.features = [conv_bn(4, input_channel, 1)]
         # building inverted residual blocks
         for t, c, n, s in interverted_residual_setting:
             output_channel = make_divisible(c * width_mult) if t > 1 else c
@@ -113,7 +113,7 @@ class KickerNet(nn.Module):
         # building classifier
         #self.classifier = nn.Linear(self.last_channel, 2)  # predict whether a ball is visible or not
         self.classifier = nn.Linear(input_channel, 1)  # predict whether a ball is visible or not
-        self.regressor = nn.Linear(self.last_channel, 4)  # predict the (x, y) ball position
+        self.regressor = nn.Sequential(nn.Linear(self.last_channel, 64), nn.Linear(64, 2)) # predict the (x, y) ball position
 
         self._initialize_weights()
 
@@ -124,9 +124,9 @@ class KickerNet(nn.Module):
         ball_visible = self.classifier(pooled_x)
 
         ball_pos = self.regressor(x)
-        mean_pos, var_pos = torch.chunk(ball_pos, chunks=2, dim=1)
-        var_pos = nn.functional.softplus(var_pos)
-        return ball_visible, mean_pos, var_pos
+        #mean_pos, var_pos = torch.chunk(ball_pos, chunks=2, dim=1)
+        #var_pos = nn.functional.softplus(var_pos)
+        return ball_visible, ball_pos  # mean_pos, var_pos
 
     def _initialize_weights(self):
         for m in self.modules():

@@ -10,6 +10,8 @@ import numpy as np
 import cv2
 import torch
 
+EPOCHSIZE = 20
+
 def frame_to_tensor(frame):
     """
     frame: A list of numpy frame of shape ( W,H,C)
@@ -35,28 +37,45 @@ def normalize_pos(pos):
 class DataLoader:
     def __init__(self, dataset, label_file):
         self.dataset = dataset
-        self.vr = video_reader.VideoReader(dataset)
+        if ".npz" in dataset:
+            self.load_from_video = False
+            self.image_data = np.load(dataset)["arr_0"]
+            self.mean = np.mean(self.image_data,axis=0)
+            self.iteration = 0
+        else:
+            self.load_from_video = True
+            self.vr = video_reader.VideoReader(dataset)
         self.df = pd.read_csv(label_file)
         self.running_epoch = True
-    def get_batch(self, batch_size = 20):
+    def get_batch(self, batch_size = 40):
         self.running_epoch = True
-        images = torch.zeros(batch_size, 3, 256, 144)
-        labels = torch.zeros(batch_size, 2)
-        for i in range(batch_size):
-            try:
-                frame_pos = self.vr.next_frame
-                if frame_pos >= len(self.df): #More frames than we have labels
+        if self.load_from_video:
+            images = torch.zeros(batch_size, 3, 256, 144)
+            labels = torch.zeros(batch_size, 2)
+            for i in range(batch_size):
+                try:
+                    frame_pos = self.vr.next_frame
+                    if frame_pos >= len(self.df): #More frames than we have labels
+                        self.running_epoch = False
+                        self.vr = video_reader.VideoReader(self.dataset)
+                        frame_pos = self.vr.next_frame
+                    image = self.vr.read_next()
+                    images[i] = frame_to_tensor(image)
+                    labels[i] = torch.Tensor([normalize_pos((self.df.loc[frame_pos]['x'], self.df.loc[frame_pos]['y']))])
+
+                    #skip 1-500 frames:
+                    for i in range(np.random.randint(1,500)):
+                        _ = self.vr.read_next()
+                except StopIteration:
                     self.running_epoch = False
                     self.vr = video_reader.VideoReader(self.dataset)
-                    frame_pos = self.vr.next_frame
-                image = self.vr.read_next()
-                images[i] = frame_to_tensor(image)
-                labels[i] = torch.Tensor([normalize_pos((self.df.loc[frame_pos]['x'], self.df.loc[frame_pos]['y']))])
-
-                #skip 1-500 frames:
-                for i in range(np.random.randint(1,500)):
-                    _ = self.vr.read_next()
-            except StopIteration:
+        else:
+            pos = np.random.randint(0,len(self.df),batch_size)
+            labels = torch.Tensor([normalize_pos((self.df.loc[frame_pos]['x'], self.df.loc[frame_pos]['y'])) for frame_pos in pos])
+            images = torch.Tensor((self.image_data[pos]-self.mean) / 128.)
+            self.iteration += 1
+            if self.iteration % EPOCHSIZE == 0:
                 self.running_epoch = False
-                self.vr = video_reader.VideoReader(self.dataset)
+
+
         return images, labels
