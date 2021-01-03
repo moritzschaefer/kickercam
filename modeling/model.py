@@ -79,7 +79,7 @@ class InvertedResidual(nn.Module):
 
 
 class KickerNet(nn.Module):
-    def __init__(self, input_size=(256, 144), width_mult=1.):
+    def __init__(self, input_size=(4,256, 144), width_mult=1.):
         super(KickerNet, self).__init__()
         block = InvertedResidual
         input_channel = 16
@@ -93,12 +93,12 @@ class KickerNet(nn.Module):
             [6, 16, 4, 2],
         ]
         downscaling_factor = np.prod([s for _, _, _, s in interverted_residual_setting])
-        self.last_channel = (input_size[0] * input_size[1]) // downscaling_factor**2 * interverted_residual_setting[-1][1]
+        self.last_channel = (input_size[1] * input_size[2]) // downscaling_factor**2 * interverted_residual_setting[-1][1]
         # building first layer
-        assert input_size[0] % downscaling_factor == 0
         assert input_size[1] % downscaling_factor == 0
+        assert input_size[2] % downscaling_factor == 0
         # input_channel = make_divisible(input_channel * width_mult)  # first channel is always 32!
-        self.features = [conv_bn(1, input_channel, 1)]
+        self.features = [conv_bn(input_size[0], input_channel, 1)]
         # building inverted residual blocks
         for t, c, n, s in interverted_residual_setting:
             output_channel = make_divisible(c * width_mult) if t > 1 else c

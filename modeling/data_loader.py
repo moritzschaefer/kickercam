@@ -26,6 +26,9 @@ def frame_to_tensor(frame):
 
     return(tensor_frame)
 
+
+
+
 def normalize_pos(pos):
     if pos[0] < 0:
         return (-100,-100)

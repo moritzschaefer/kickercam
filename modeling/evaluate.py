@@ -26,13 +26,10 @@ def frame_to_tensor(frame):
     returns: A normalized Tensor of shape (C,W,H)
     """
     frame = cv2.resize(frame, (256, 144))
-
     frame = frame.T #Rearange to C,W,H
-    #frame = np.expand_dims(frame, axis=0)
     frame = frame / 255.
-    tensor_frame = torch.Tensor(frame)
+    return torch.Tensor(frame)
 
-    return(tensor_frame)
 
 def normalize_pos(pos):
     m_x, sd_x = 639.5, 369.5040595176188
@@ -44,11 +41,18 @@ def denormalize_pos(pos):
     m_y, sd_y = 359.5, 207.84589643932512
     return (int(pos[0]*sd_x + m_x),int(pos[1]*sd_y + m_y))
 
-def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmodel_best.pth.tar", display=True):
+def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmodel_best.pth.tar", display=True, processed_data=None):
     window_size = 20
     delay = 8
     running = True
-    #TODO Load data
+    if processed_data:
+        image_data = np.load(processed_data)["arr_0"]
+        mean = np.mean(image_data, axis=0)
+        scale = 128
+    else:
+        #TODO Better Mean Image
+        mean = 0
+        scale = 255
     vr = video_reader.VideoReader(dataset)
 
     model = load_checkpoint(model_name, use_cuda=False)
@@ -58,7 +62,6 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
         cv2.namedWindow('Frame')
 
     # Read until video is completed
-    frame_pos = -1
     while vr.is_opened():
         frame_pos = vr.next_frame
         #cap.set(cv2.CAP_PROP_POS_FRAMES, frame_pos)
@@ -71,19 +74,24 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
             except StopIteration:
                 break
 
+            if processed_data:
+                frame_tensor = torch.Tensor(image_data[frame_pos])
+            else:
+                frame_tensor = frame_to_tensor(frame)
+            frame_tensor = torch.unsqueeze((frame_tensor - mean) / scale, 0).float()
+            ball_visible, pos = model(frame_tensor)
+            denorm_pos = denormalize_pos(pos.detach().cpu().numpy()[0])
 
-            frame_tensor = torch.unsqueeze(frame_to_tensor(frame),0)
-            ball_visible, pos, var_pos = model(frame_tensor)
-            print("ball_visible : {}, Pos: {},  Var_pos: {}".format(ball_visible, pos, var_pos))
-            pos = denormalize_pos(pos.detach().cpu().numpy()[0])
-            ball_pos.loc[vr.next_frame] = {"x": pos[0], "y": pos[1]}
+            print("ball_visible : {}, Pos: {},  Denorm_pos: {}".format(ball_visible, pos,denorm_pos))
+
+            ball_pos.loc[frame_pos] = {"x": denorm_pos[0], "y": denorm_pos[1]}
 
 
 
         if display:
-            point = pos
+            point = denorm_pos
             for i in range(window_size):
-                past = ball_pos.loc[max(frame_pos - window_size + i, 1)]
+                past = ball_pos.loc[max(frame_pos - window_size + i, 0)]
                 past_point = (int(past['x']), int(past['y']))
                 cv2.circle(frame, past_point,  3, (0, 255, 0), 3)
             cv2.circle(frame, point, 5, (0, 0, 255), 8)
@@ -113,4 +121,4 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
 
 
 if __name__ == '__main__':
-    evaluate()
+    evaluate(processed_data="../dataset/v3rgbgray.npz")
