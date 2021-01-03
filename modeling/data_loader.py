@@ -45,6 +45,10 @@ class DataLoader:
         for i in range(batch_size):
             try:
                 frame_pos = self.vr.next_frame
+                if frame_pos >= len(self.df): #More frames than we have labels
+                    self.running_epoch = False
+                    self.vr = video_reader.VideoReader(self.dataset)
+                    frame_pos = self.vr.next_frame
                 image = self.vr.read_next()
                 images[i] = frame_to_tensor(image)
                 labels[i] = torch.Tensor([normalize_pos((self.df.loc[frame_pos]['x'], self.df.loc[frame_pos]['y']))])

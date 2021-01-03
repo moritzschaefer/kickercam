@@ -52,3 +52,6 @@ class VideoReader:
     def is_opened(self):
         return self.cap.isOpened()
 
+    def __del__(self):
+        self.cap.release()
+        print("Video Reader is freed")

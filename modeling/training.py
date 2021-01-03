@@ -13,7 +13,8 @@ import os
 import shutil
 from model import KickerNet, Variational_L2_loss
 from data_loader import DataLoader
-NUM_EPOCHS = 100
+import numpy as np
+NUM_EPOCHS = 200
 BATCH_SIZE = 20
 # we first train on v2 and predict/test on v3
 
@@ -24,7 +25,7 @@ def main():
     # create your optimizer
     #optimizer = optim.SGD(net.parameters(), lr=0.001)
     optimizer = optim.Adam(net.parameters(), lr=0.001)
-
+    losses = []
     NLL_loss = Variational_L2_loss()
     BCE_loss = torch.nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([0.05]))
     for epoch in range(NUM_EPOCHS):
@@ -44,7 +45,7 @@ def main():
             loss = pos_loss + 20*visible_loss
             loss.backward()
             optimizer.step()    # Does the update
-
+            losses.append(( 20*visible_loss.detach().cpu().numpy(), pos_loss.detach().cpu().numpy()))
         dl.running_epoch=True
         print('Train Epoch: {} BCELOSS : {:.6f} \t POSLoss: {:.3f}'.format(
             epoch, 20*visible_loss, pos_loss))
@@ -53,6 +54,7 @@ def main():
             'state_dict': net.state_dict(),
             'optimizer': optimizer.state_dict(),
         }, True, folder='./trained_models')
+    np.savetxt("traininglosses.txt",np.asarray(losses))
 
 def save_checkpoint(state, is_best, folder='./', filename='checkpoint.pth.tar', name = "basic"):
     if not os.path.isdir(folder):
