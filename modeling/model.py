@@ -9,9 +9,11 @@ Adopted from https://github.com/tonylins/pytorch-mobilenet-v2/blob/master/Mobile
 '''
 
 import math
+
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
+
 
 def conv_bn(inp, oup, stride):
     return nn.Sequential(
@@ -96,7 +98,7 @@ class KickerNet(nn.Module):
         assert input_size[0] % downscaling_factor == 0
         assert input_size[1] % downscaling_factor == 0
         # input_channel = make_divisible(input_channel * width_mult)  # first channel is always 32!
-        self.features = [conv_bn(4, input_channel, 1)]
+        self.features = [conv_bn(1, input_channel, 1)]
         # building inverted residual blocks
         for t, c, n, s in interverted_residual_setting:
             output_channel = make_divisible(c * width_mult) if t > 1 else c

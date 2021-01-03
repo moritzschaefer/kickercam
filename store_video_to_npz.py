@@ -10,6 +10,7 @@ import numpy as np
 
 from video_reader import VideoReader
 
+
 def get_greyscale_hsv_filtered(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
@@ -28,11 +29,14 @@ if __name__ == '__main__':
     ap.add_argument('outputfile')
     ap.add_argument('--target_height', default=144)
     ap.add_argument('--target_width', default=256)
-    ap.add_argument('--hsv',  action='store_true', default=False)
+    ap.add_argument('--hsv_combined',  action='store_true', default=False)
 
     num_frames = 120 * 60 * 5
     args = ap.parse_args(sys.argv[1:])
-    data = np.ndarray(shape=(num_frames, 3 + args.hsv, args.target_width, args.target_height), dtype=np.uint8)
+    if args.hsv_combined:
+        data = np.ndarray(shape=(num_frames, 1, args.target_width, args.target_height), dtype=np.uint8)
+    else:
+        data = np.ndarray(shape=(num_frames, 3, args.target_width, args.target_height), dtype=np.uint8)
 
     vr = VideoReader(args.videofile, buffer_length=0)
 
@@ -43,9 +47,9 @@ if __name__ == '__main__':
         except StopIteration:
             break
         scaled_frame = cv2.resize(frame, (args.target_width, args.target_height))
-        if args.hsv:
+        if args.hsv_combined:
             grey = np.expand_dims(np.transpose(get_greyscale_hsv_filtered(scaled_frame)), 0)
-            data[i] = np.concatenate([scaled_frame.T, grey], axis=0)
+            data[i] = grey  # np.concatenate([scaled_frame.T, grey], axis=0)
         else:
             data[i] = np.transpose(scaled_frame)
 

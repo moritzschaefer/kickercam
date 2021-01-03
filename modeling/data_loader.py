@@ -4,10 +4,8 @@ This is completely copied from https://github.com/tonylins/pytorch-mobilenet-v2
 it needs to be adapted entirely
 '''
 
-import video_reader
-import pandas as pd
 import numpy as np
-import cv2
+import pandas as pd
 import torch
 
 EPOCHSIZE = 20
@@ -18,6 +16,7 @@ def frame_to_tensor(frame):
 
     returns: A normalized Tensor of shape (C,W,H)
     """
+    import cv2
     frame = cv2.resize(frame, (256, 144))
 
     frame = frame.T #Rearange to C,W,H
@@ -44,9 +43,11 @@ class DataLoader:
             self.iteration = 0
         else:
             self.load_from_video = True
+            import video_reader
             self.vr = video_reader.VideoReader(dataset)
         self.df = pd.read_csv(label_file)
         self.running_epoch = True
+
     def get_batch(self, batch_size = 40):
         self.running_epoch = True
         if self.load_from_video:
