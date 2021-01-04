@@ -40,3 +40,9 @@ More information in doc/DATASET.md
 # Hardware
 
 Nvidia Jetson nano (4GB RAM) with Waveshare IMX219-160 camera.
+Autostart was setup using "Startup Applications"
+# TODOs
+
+- For now, jetson/load_camera.py is used to display the kickercam in fullscreen mode. This should be merged with video_reader.py (to make use of the ringbuffer)
+- The python project is not setup properly. This has to be fixed to make relative imports work (e.g. video_reader.py)
+- ball-inference is not yet used at all
