@@ -1,4 +1,4 @@
-They data set shows several foosball matches (some realistic ones, some for demonstrational purposes) with the following features
+The data set shows several foosball matches (some realistic ones, some for demonstrational purposes) with the following features
 
 - moving ball
 - ocluded ball (by players, sometimes by hands)
@@ -15,4 +15,4 @@ gst-launch-1.0 nvarguscamerasrc !   'video/x-raw(memory:NVMM), width=(int)1280, 
 
 The video files of the data set can be downloaded here: https://polybox.ethz.ch/index.php/s/H662TzwhOz4xkGJ
 
-The ball positions were labeled manually, as described in doc/LABELING.md.
+The ball positions were labeled manually, as described in doc/LABELING.md. Label files can be found in the dataset/ directory.
