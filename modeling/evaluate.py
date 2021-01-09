@@ -10,7 +10,7 @@ import torch.optim as optim
 
 import video_reader
 
-from ..preprocessing import frame_to_tensor
+from ..preprocessing import process_frame, normalize_image
 from .model import KickerNet, Variational_L2_loss
 
 
@@ -67,10 +67,10 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
                 break
 
             if processed_data:
-                frame_tensor = torch.Tensor(image_data[frame_pos])
+                frame_tensor = normalize_image(torch.Tensor(image_data[frame_pos]), mean, scale)
             else:
-                frame_tensor = frame_to_tensor(frame)
-            frame_tensor = torch.unsqueeze((frame_tensor - mean) / scale, 0).float()
+                frame_tensor = normalize_image(process_frame(frame), mean, scale)
+            frame_tensor = torch.unsqueeze(frame_tensor, 0).float()
             ball_visible, pos = model(frame_tensor)
             denorm_pos = denormalize_pos(pos.detach().cpu().numpy()[0])
 
