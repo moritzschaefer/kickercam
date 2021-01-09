@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import torch
 
 
 def process_frame(frame, use_rgb=True, use_gray=False, target_width=256,
@@ -28,3 +29,14 @@ def process_frame(frame, use_rgb=True, use_gray=False, target_width=256,
     else:
         result = scaled_frame.T
     return result
+
+def frame_to_tensor(frame):
+    """
+    frame: A list of numpy frame of shape ( W,H,C)
+
+    returns: A normalized Tensor of shape (C,W,H)
+    """
+    frame = cv2.resize(frame, (256, 144))
+    frame = frame.T #Rearange to C,W,H
+    frame = frame / 255.
+    return torch.Tensor(frame)

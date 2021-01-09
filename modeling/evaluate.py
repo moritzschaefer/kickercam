@@ -9,7 +9,9 @@ import torch
 import torch.optim as optim
 
 import video_reader
-from model import KickerNet, Variational_L2_loss
+
+from ..preprocessing import frame_to_tensor
+from .model import KickerNet, Variational_L2_loss
 
 
 def load_checkpoint(file_path, use_cuda=False):
@@ -19,16 +21,6 @@ def load_checkpoint(file_path, use_cuda=False):
     model.load_state_dict(checkpoint['state_dict'])
     return model
 
-def frame_to_tensor(frame):
-    """
-    frame: A list of numpy frame of shape ( W,H,C)
-
-    returns: A normalized Tensor of shape (C,W,H)
-    """
-    frame = cv2.resize(frame, (256, 144))
-    frame = frame.T #Rearange to C,W,H
-    frame = frame / 255.
-    return torch.Tensor(frame)
 
 
 def normalize_pos(pos):

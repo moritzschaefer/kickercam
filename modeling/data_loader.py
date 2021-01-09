@@ -8,24 +8,9 @@ import numpy as np
 import pandas as pd
 import torch
 
+from ..preprocessing import frame_to_tensor
+
 EPOCHSIZE = 20
-
-def frame_to_tensor(frame):
-    """
-    frame: A list of numpy frame of shape ( W,H,C)
-
-    returns: A normalized Tensor of shape (C,W,H)
-    """
-    import cv2
-    frame = cv2.resize(frame, (256, 144))
-
-    frame = frame.T #Rearange to C,W,H
-    #frame = np.expand_dims(frame, axis=0)
-    frame = frame / 255.
-    tensor_frame = torch.Tensor(frame)
-
-    return(tensor_frame)
-
 
 
 
@@ -59,7 +44,7 @@ class DataLoader:
             for i in range(batch_size):
                 try:
                     frame_pos = self.vr.next_frame
-                    if frame_pos >= len(self.df): #More frames than we have labels
+                    if frame_pos >= len(self.df):  # More frames than we have labels
                         self.running_epoch = False
                         self.vr = video_reader.VideoReader(self.dataset)
                         frame_pos = self.vr.next_frame
