@@ -46,3 +46,11 @@ Autostart was setup using "Startup Applications"
 - For now, jetson/load_camera.py is used to display the kickercam in fullscreen mode. This should be merged with video_reader.py (to make use of the ringbuffer)
 - The python project is not setup properly. This has to be fixed to make relative imports work (e.g. video_reader.py)
 - ball-inference is not yet used at all
+
+
+- refactor preprocessing
+  create data_utils 
+  refactor: store_to_npz, data_loader to data_utils
+- test moritz' model
+  format the test video using store_to_npz
+- use tensorboard
