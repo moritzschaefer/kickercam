@@ -23,48 +23,26 @@ def normalize_pos(pos):
 
 class DataLoader:
     def __init__(self, dataset, label_file):
+        '''
+        load an npz (for images) and a csv (for labels) file for training (and prediction)
+        '''
         self.dataset = dataset
-        if ".npz" in dataset:
-            self.load_from_video = False
-            self.image_data = np.load(dataset)["arr_0"]
-            self.mean = np.mean(self.image_data,axis=0)
-            self.iteration = 0
-        else:
-            self.load_from_video = True
-            import video_reader
-            self.vr = video_reader.VideoReader(dataset)
+        self.image_data = np.load(dataset)["arr_0"]  # arr_0 is the default name
+        self.mean = np.mean(self.image_data,axis=0)
+        self.iteration = 0
         self.df = pd.read_csv(label_file)
-        self.running_epoch = True
 
-    def get_batch(self, batch_size = 40):
-        self.running_epoch = True
-        if self.load_from_video:
-            images = torch.zeros(batch_size, 3, 256, 144)
-            labels = torch.zeros(batch_size, 2)
-            for i in range(batch_size):
-                try:
-                    frame_pos = self.vr.next_frame
-                    if frame_pos >= len(self.df):  # More frames than we have labels
-                        self.running_epoch = False
-                        self.vr = video_reader.VideoReader(self.dataset)
-                        frame_pos = self.vr.next_frame
-                    image = self.vr.read_next()
-                    images[i] = frame_to_tensor(image)
-                    labels[i] = torch.Tensor([normalize_pos((self.df.loc[frame_pos]['x'], self.df.loc[frame_pos]['y']))])
 
-                    #skip 1-500 frames:
-                    for i in range(np.random.randint(1,500)):
-                        _ = self.vr.read_next()
-                except StopIteration:
-                    self.running_epoch = False
-                    self.vr = video_reader.VideoReader(self.dataset)
-        else:
-            pos = np.random.randint(0,len(self.df),batch_size)
-            labels = torch.Tensor([normalize_pos((self.df.loc[frame_pos]['x'], self.df.loc[frame_pos]['y'])) for frame_pos in pos])
-            images = torch.Tensor((self.image_data[pos]-self.mean) / 128.)
+    def iterate_epoch(self, batch_size=40):
+        while True:
+            pos = np.random.randint(0, len(self.df), batch_size)
+            labels = torch.Tensor([normalize_pos((self.df.loc[frame_pos]['x'],
+                                                  self.df.loc[frame_pos]['y']))
+                                   for frame_pos in pos])
+
+            images = torch.Tensor((self.image_data[pos]-self.mean) / 128.)  # TODO use frame_to_tensor and/or integrate this normalization into preprocessing/__init__.py
             self.iteration += 1
             if self.iteration % EPOCHSIZE == 0:
-                self.running_epoch = False
+                raise StopIteration
 
-
-        return images, labels
+            return images, labels

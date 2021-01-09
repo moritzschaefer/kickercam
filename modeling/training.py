@@ -40,7 +40,6 @@ def main():
         NLL_loss.cuda()
         MSE_loss.cuda()
         BCE_loss.cuda()
-    #dl = DataLoader("../dataset/v2.h265", "../dataset/v2.h265.csv")
     dl = DataLoader(args.image_data, args.labels)
 
     # create your optimizer
@@ -48,8 +47,7 @@ def main():
     optimizer = optim.Adam(net.parameters(), lr=0.001)
     losses = []
     for epoch in range(NUM_EPOCHS):
-        iteration = 0
-        while dl.running_epoch:
+        for iteration, (mini_batch, label) in enumerate(dl.iterate_epoch()):
             mini_batch, label = dl.get_batch(BATCH_SIZE)
             visible = torch.unsqueeze((label[:,0]>-90).type(dtype=torch.float32), 1)
             if args.cuda:
@@ -74,8 +72,6 @@ def main():
             losses.append(( 20*visible_loss.detach().cpu().numpy(), pos_loss.detach().cpu().numpy()))
             print('Train Epoch: {}:{} BCELOSS : {:.6f} \t POSLoss: {:.3f}'.format(
                 epoch, iteration, 20 * visible_loss, pos_loss))
-            iteration += 1
-        dl.running_epoch = True
 
         save_checkpoint({
             'state_dict': net.state_dict(),
