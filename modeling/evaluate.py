@@ -13,7 +13,7 @@ import video_reader
 
 from ..preprocessing import normalize_image, process_frame
 from .model import KickerNet, Variational_L2_loss
-
+from .config import config
 
 #TODO refactor to a better place? 
 def load_checkpoint(file_path, use_cuda=False):
@@ -22,7 +22,7 @@ def load_checkpoint(file_path, use_cuda=False):
     try:
         model_config = checkpoint["config"]
     except:
-        model_config = { "input_size":(3,256, 144), "use_gray": False, "use_rgb": True, "norm_mean": 0, "normalization_scale": 255.}
+        model_config = config
     model = KickerNet(model_config)
     model.load_state_dict(checkpoint['state_dict'])
     
