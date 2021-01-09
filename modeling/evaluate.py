@@ -1,6 +1,7 @@
-
+import argparse
 import os
 import shutil
+import sys
 
 import cv2
 import numpy as np
@@ -22,7 +23,6 @@ def load_checkpoint(file_path, use_cuda=False):
     return model
 
 
-
 def normalize_pos(pos):
     m_x, sd_x = 639.5, 369.5040595176188
     m_y, sd_y = 359.5, 207.84589643932512
@@ -33,19 +33,21 @@ def denormalize_pos(pos):
     m_y, sd_y = 359.5, 207.84589643932512
     return (int(pos[0]*sd_x + m_x),int(pos[1]*sd_y + m_y))
 
-def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmodel_best.pth.tar", display=True, processed_data=None):
+def evaluate(video_file="../dataset/v3.h265",
+             model_name="trained_models/basicmodel_best.pth.tar",
+             display=True, processed_file=None):
     window_size = 20
     delay = 8
     running = True
-    if processed_data:
-        image_data = np.load(processed_data)["arr_0"]
-        mean = np.mean(image_data, axis=0)
+    if processed_file:
+        processed_data = np.load(processed_file)["arr_0"]
+        mean = np.mean(processed_data, axis=0)
         scale = 128
     else:
-        #TODO Better Mean Image
+        # TODO Better Mean Image
         mean = 0
         scale = 255
-    vr = video_reader.VideoReader(dataset)
+    vr = video_reader.VideoReader(video_file)
 
     model = load_checkpoint(model_name, use_cuda=False)
     model.eval()
@@ -66,15 +68,15 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
             except StopIteration:
                 break
 
-            if processed_data:
-                frame_tensor = torch.Tensor(image_data[frame_pos])
+            if processed_file:
+                frame_tensor = torch.Tensor(processed_data[frame_pos])
             else:
-                frame_tensor = frame_to_tensor(frame)
+                frame_tensor = frame_to_tensor(frame, resize=True)
             frame_tensor = torch.unsqueeze((frame_tensor - mean) / scale, 0).float()
             ball_visible, pos = model(frame_tensor)
             denorm_pos = denormalize_pos(pos.detach().cpu().numpy()[0])
 
-            print("ball_visible : {}, Pos: {},  Denorm_pos: {}".format(ball_visible, pos,denorm_pos))
+            print(f'ball_visible : {ball_visible}, Pos: {pos},  Denorm_pos: {denorm_pos}')
 
             ball_pos.loc[frame_pos] = {"x": denorm_pos[0], "y": denorm_pos[1]}
 
@@ -113,4 +115,9 @@ def evaluate(dataset="../dataset/v3.h265", model_name = "trained_models/basicmod
 
 
 if __name__ == '__main__':
-    evaluate(processed_data="../dataset/v3rgbgray.npz")
+    ap = ArgumentParser()
+    ap.add_arguments('videofile', description='videofile')
+    ap.add_arguments('--processed_data', description='processed file in npz format', default=None)
+
+    args = ap.parse_arguments(sys.argv[1:])
+    evaluate(args.videofile, processed_file=args.processed_data)
