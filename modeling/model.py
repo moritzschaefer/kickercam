@@ -108,23 +108,23 @@ class KickerNet(nn.Module):
                 else:
                     self.features.append(block(input_channel, output_channel, 1, expand_ratio=t))
                 input_channel = output_channel
-        #self.features.append(nn.Conv2d(input_channel, input_channel))
+        self.features.append(nn.Conv2d(input_channel, input_channel))
         # make it nn.Sequential
         self.features = nn.Sequential(*self.features)
 
         # building classifier
-        #self.classifier = nn.Linear(self.last_channel, 2)  # predict whether a ball is visible or not
-        self.classifier = nn.Linear(input_channel, 1)  # predict whether a ball is visible or not
-        self.regressor = nn.Sequential(nn.Linear(self.last_channel, 64), nn.Linear(64, 2)) # predict the (x, y) ball position
+        self.linear_layers = nn.Sequential(nn.Linear(self.last_channel, 128),nn.Linear(128, 64))
+        self.classifier = nn.Linear(64, 1)  # predict whether a ball is visible or not
+        self.regressor = nn.Linear(64, 2) # predict the (x, y) ball position
 
         self._initialize_weights()
 
     def forward(self, x):
         x = self.features(x)
-        pooled_x = torch.max(torch.max(x, 3).values, 2).values
         x = x.view(-1, self.last_channel)
-        ball_visible = self.classifier(pooled_x)
 
+        x = self.linear_layers(x)
+        ball_visible = self.classifier(x)
         ball_pos = self.regressor(x)
         #mean_pos, var_pos = torch.chunk(ball_pos, chunks=2, dim=1)
         #var_pos = nn.functional.softplus(var_pos)
