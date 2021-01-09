@@ -79,8 +79,9 @@ class InvertedResidual(nn.Module):
 
 
 class KickerNet(nn.Module):
-    def __init__(self, input_size=(4,256, 144), width_mult=1.):
+    def __init__(self, config, width_mult=1.):
         super(KickerNet, self).__init__()
+        input_size=config["input_size"]
         block = InvertedResidual
         input_channel = 16
         last_channel = 16

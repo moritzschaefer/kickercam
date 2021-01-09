@@ -23,8 +23,10 @@ NUM_EPOCHS = 200
 BATCH_SIZE = 20
 # we first train on v2 and predict/test on v3
 
+
+model_config =  {"input_size":(3,256, 144), "use_gray": False, "use_rgb": True, "norm_mean": 0, "normalization_scale": 255.}
+
 def main():
-    net = KickerNet()
     ap = argparse.ArgumentParser()
     ap.add_argument('image_data')
     ap.add_argument('labels')
@@ -35,6 +37,8 @@ def main():
     MSE_loss = torch.nn.MSELoss(reduction='none')
     BCE_loss = torch.nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([0.05]))
 
+
+    net = KickerNet(model_config)
     if args.cuda:
         net.cuda()
         NLL_loss.cuda()
@@ -48,7 +52,6 @@ def main():
     losses = []
     for epoch in range(NUM_EPOCHS):
         for iteration, (mini_batch, label) in enumerate(dl.iterate_epoch()):
-            mini_batch, label = dl.get_batch(BATCH_SIZE)
             visible = torch.unsqueeze((label[:,0]>-90).type(dtype=torch.float32), 1)
             if args.cuda:
                 label = label.cuda()

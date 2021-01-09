@@ -15,12 +15,18 @@ from ..preprocessing import normalize_image, process_frame
 from .model import KickerNet, Variational_L2_loss
 
 
+#TODO refactor to a better place? 
 def load_checkpoint(file_path, use_cuda=False):
     checkpoint = torch.load(file_path) if use_cuda else \
         torch.load(file_path, map_location=lambda storage, location: storage)
-    model = KickerNet()
+    try:
+        model_config = checkpoint["config"]
+    except:
+        model_config = { "input_size":(3,256, 144), "use_gray": False, "use_rgb": True, "norm_mean": 0, "normalization_scale": 255.}
+    model = KickerNet(model_config)
     model.load_state_dict(checkpoint['state_dict'])
-    return model
+    
+    return model, model_config
 
 
 def normalize_pos(pos):
@@ -49,7 +55,7 @@ def evaluate(video_file="../dataset/v3.h265",
         scale = 255
     vr = video_reader.VideoReader(video_file)
 
-    model = load_checkpoint(model_name, use_cuda=False)
+    model, model_config = load_checkpoint(model_name, use_cuda=False)
     model.eval()
     ball_pos = pd.DataFrame(columns=['x', 'y'], dtype=int)
     if display:

@@ -31,17 +31,6 @@ def process_frame(frame, use_rgb=True, use_gray=False, target_width=256,
         result = scaled_frame.T
     return result
 
-def frame_to_tensor(frame):
-    """
-    frame: A list of numpy frame of shape ( W,H,C)
-
-    returns: A normalized Tensor of shape (C,W,H)
-    """
-    frame = cv2.resize(frame, (256, 144))
-    frame = frame.T #Rearange to C,W,H
-    frame = frame / 255.
-    return torch.Tensor(frame)
-
 def normalize_pos(pos):
     if pos[0] < 0:
         return (-100,-100)
