@@ -22,6 +22,7 @@ def process_frame(frame, use_rgb=True, use_gray=False, target_width=256,
         gray = np.expand_dims(cv2.cvtColor(scaled_frame, cv2.COLOR_BGR2GRAY).T,
                               0)
 
+    #TODO Is it good to Transpose all images? W,H,C -> C,H,W, but we want C,W,H ?! 
     if use_rgb and use_gray:
         result = np.concatenate([scaled_frame.T, gray], axis=0)
     elif use_gray:
@@ -40,3 +41,13 @@ def frame_to_tensor(frame):
     frame = frame.T #Rearange to C,W,H
     frame = frame / 255.
     return torch.Tensor(frame)
+
+def normalize_pos(pos):
+    if pos[0] < 0:
+        return (-100,-100)
+    m_x, sd_x = 639.5, 369.5040595176188
+    m_y, sd_y = 359.5, 207.84589643932512
+    return ((pos[0]-m_x )/sd_x,(pos[1]-m_y )/sd_y)
+
+def normalize_image(image, mean, scale=128.):
+    return torch.Tensor((image-mean) / scale)

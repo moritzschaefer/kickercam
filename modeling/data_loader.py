@@ -21,6 +21,9 @@ def normalize_pos(pos):
     m_y, sd_y = 359.5, 207.84589643932512
     return ((pos[0]-m_x )/sd_x,(pos[1]-m_y )/sd_y)
 
+def normalize_image(image, mean, scale=128.):
+    return torch.Tensor((image-mean) / scale)
+
 class DataLoader:
     def __init__(self, dataset, label_file):
         '''
@@ -40,7 +43,7 @@ class DataLoader:
                                                   self.df.loc[frame_pos]['y']))
                                    for frame_pos in pos])
 
-            images = torch.Tensor((self.image_data[pos]-self.mean) / 128.)  # TODO use frame_to_tensor and/or integrate this normalization into preprocessing/__init__.py
+            images = normalize_image(self.image_data[pos], self.mean, 128) # TODO use frame_to_tensor and/or integrate this normalization into preprocessing/__init__.py
             self.iteration += 1
             if self.iteration % EPOCHSIZE == 0:
                 raise StopIteration
