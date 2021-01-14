@@ -1,3 +1,4 @@
+#/usr/bin/env python
 '''
 Load all frames from an encoded video file and store them as compressed numpy
 file
@@ -9,10 +10,11 @@ import sys
 import cv2
 import numpy as np
 
-from preprocessing import process_frame
-from video_reader import VideoReader
+from .preprocessing import process_frame
+from .video_reader import VideoReader
 
-if __name__ == '__main__':
+
+def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('videofile')
     ap.add_argument('outputfile')
@@ -35,8 +37,12 @@ if __name__ == '__main__':
             frame = vr.read_next()
         except StopIteration:
             break
-        data[i] = process_frame(frame, args.rgb, args.gray, args.target_width,
-                                args.target_height)
+        data[i] = process_frame(frame, args.rgb, args.gray,
+                                (3, args.target_width, args.target_height))
         i += 1
 
     np.savez_compressed(args.outputfile, data[:i])
+
+
+if __name__ == '__main__':
+    main()

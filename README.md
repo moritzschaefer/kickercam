@@ -1,5 +1,7 @@
 # kickercam
 
+Foosball (Kicker, Tablesoccer) live camera with goal detection and slow-motion replay
+
 This repository contains code for several tasks related to, ball tracking and slow-motion replay of a foosball game.
 The project aims to realize the following tasks:
 
@@ -9,10 +11,6 @@ The project aims to realize the following tasks:
 
 New version in "jetson". The rest sux.
 Jetson IP: 192.168.178.111, VNC password: password (connect with tightvnc client, or similar).
-
-Foosball (Kicker, Tablesoccer) live camera with goal detection and slow-motion replay
-
-python3 main2.py starts the camera and outputs to a Monitor. Replay is Implemented but currently not used.  
 
 # Installation
 
@@ -28,10 +26,14 @@ For the modeling part:
 - torchvision
 - cudatoolkit
 
-
 You can use conda/mamba:
 
 mamba install pandas opencv pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -c conda-forge
+
+
+Make sure to install this project as dev-dependency like so:
+
+    python setup.py develop
 
 # Dataset
 
@@ -54,3 +56,7 @@ Autostart was setup using "Startup Applications"
 - test moritz' model
   format the test video using store_to_npz
 - use tensorboard
+
+# Scripts 
+
+Code for training, running and so on can be run via command line scripts. Check out setup.cfg for defined console_scripts.

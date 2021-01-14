@@ -2,6 +2,7 @@ import argparse
 import os
 import shutil
 import sys
+from argparse import ArgumentParser
 
 import cv2
 import numpy as np
@@ -9,11 +10,11 @@ import pandas as pd
 import torch
 import torch.optim as optim
 
-import video_reader
-
 from ..preprocessing import normalize_image, process_frame
-from .model import KickerNet, Variational_L2_loss
+from ..video_reader import VideoReader
 from .config import config
+from .model import KickerNet, Variational_L2_loss
+
 
 #TODO refactor to a better place? 
 def load_checkpoint(file_path, use_cuda=False):
@@ -53,7 +54,7 @@ def evaluate(video_file="../dataset/v3.h265",
         # TODO Better Mean Image
         mean = 0
         scale = 255
-    vr = video_reader.VideoReader(video_file)
+    vr = VideoReader(video_file)
 
     model, model_config = load_checkpoint(model_name, use_cuda=False)
     model.eval()
@@ -78,7 +79,7 @@ def evaluate(video_file="../dataset/v3.h265",
                 frame_tensor = normalize_image(
                     torch.Tensor(processed_data[frame_pos]), mean, scale)
             else:
-                frame_tensor = normalize_image(process_frame(frame),
+                frame_tensor = normalize_image(process_frame(frame, **model_config),
                                                mean, scale)
             frame_tensor = torch.unsqueeze(frame_tensor, 0).float()
             ball_visible, pos = model(frame_tensor)
@@ -121,11 +122,14 @@ def evaluate(video_file="../dataset/v3.h265",
         cv2.destroyAllWindows()
 
 
+def main():
+    ap = ArgumentParser()
+    ap.add_argument('videofile', help='videofile')
+    ap.add_argument('--processed_data', help='processed file in npz format', default=None)
+
+    args = ap.parse_args(sys.argv[1:])
+    evaluate(args.videofile, processed_file=args.processed_data)
+
 
 if __name__ == '__main__':
-    ap = ArgumentParser()
-    ap.add_arguments('videofile', description='videofile')
-    ap.add_arguments('--processed_data', description='processed file in npz format', default=None)
-
-    args = ap.parse_arguments(sys.argv[1:])
-    evaluate(args.videofile, processed_file=args.processed_data)
+    main()

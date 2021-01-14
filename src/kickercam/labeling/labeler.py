@@ -4,8 +4,9 @@ import sys
 import time
 
 import cv2
-from video_reader import VideoReader
 import pandas as pd
+
+from ..video_reader import VideoReader
 
 # label the video by mouse dragging
 

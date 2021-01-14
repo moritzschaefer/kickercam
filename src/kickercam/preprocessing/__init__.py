@@ -3,12 +3,14 @@ import numpy as np
 import torch
 
 
-def process_frame(frame, use_rgb=True, use_gray=False, target_width=256,
-                  target_height=144):
+def process_frame(frame, use_rgb=True, use_gray=False, input_size=(3, 256, 144)):
     '''
     Convert a full-size frame (usually 1280x720) into a smaller frame
     (potentially with reduced dimensions).
+
+    input_size: refers to the model input
     '''
+    _, target_width, target_height = input_size
 
     scaled_frame = cv2.resize(frame, (target_width, target_height))
     if use_gray:

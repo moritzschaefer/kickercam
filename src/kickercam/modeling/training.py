@@ -16,15 +16,23 @@ import numpy as np
 import torch
 import torch.optim as optim
 
-from data_loader import DataLoader
-from model import KickerNet, Variational_L2_loss
+from .config import config
+from .data_loader import DataLoader
+from .model import KickerNet, Variational_L2_loss
 
 NUM_EPOCHS = 200
 BATCH_SIZE = 20
 # we first train on v2 and predict/test on v3
 
 
-model_config =  {"input_size":(3,256, 144), "use_gray": False, "use_rgb": True, "norm_mean": 0, "normalization_scale": 255.}
+def save_checkpoint(state, is_best, folder='./', filename='checkpoint.pth.tar', name = "basic"):
+    if not os.path.isdir(folder):
+        os.mkdir(folder)
+    torch.save(state, os.path.join(folder, name + filename))
+    if is_best:
+        shutil.copyfile(os.path.join(folder, name + filename),
+                        os.path.join(folder, name + 'model_best.pth.tar'))
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -38,7 +46,7 @@ def main():
     BCE_loss = torch.nn.BCEWithLogitsLoss(pos_weight=torch.Tensor([0.05]))
 
 
-    net = KickerNet(model_config)
+    net = KickerNet(config)
     if args.cuda:
         net.cuda()
         NLL_loss.cuda()
@@ -81,15 +89,6 @@ def main():
             'optimizer': optimizer.state_dict(),
         }, True, folder='./trained_models')
     np.savetxt("traininglosses.txt",np.asarray(losses))
-
-def save_checkpoint(state, is_best, folder='./', filename='checkpoint.pth.tar', name = "basic"):
-    if not os.path.isdir(folder):
-        os.mkdir(folder)
-    torch.save(state, os.path.join(folder, name + filename))
-    if is_best:
-        shutil.copyfile(os.path.join(folder, name + filename),
-                        os.path.join(folder, name + 'model_best.pth.tar'))
-
 
 if __name__ == '__main__':
     main()
