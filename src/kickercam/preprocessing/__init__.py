@@ -3,7 +3,7 @@ import numpy as np
 import torch
 
 
-def process_frame(frame, use_rgb=True, use_gray=False, input_size=(3, 256, 144)):
+def process_frame(frame, use_rgb=True, use_gray=False, input_size=(3, 256, 144), **kwargs):
     '''
     Convert a full-size frame (usually 1280x720) into a smaller frame
     (potentially with reduced dimensions).
