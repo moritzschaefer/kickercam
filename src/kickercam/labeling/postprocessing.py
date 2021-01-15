@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
+import argparse
+import collections
 import math
+import sys
 
 import cv2
 import pandas as pd
-import argparse
-import sys
-import collections
 
-from video_reader import VideoReader
-
+from ..video_reader import VideoReader
 
 RESIZE = 1  # set to 1 to disable scaling
 SHOW_BALL_LABEL = True
