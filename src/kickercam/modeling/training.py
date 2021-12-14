@@ -84,11 +84,13 @@ def main():
             print('Train Epoch: {}:{} BCELOSS : {:.6f} \t POSLoss: {:.3f}'.format(
                 epoch, iteration, 20 * visible_loss, pos_loss))
 
+        best = max([x[1] for x in losses])
+        recent_best = max([x[1] for x in losses[-20:]])
         save_checkpoint({
             'state_dict': net.state_dict(),
             'optimizer': optimizer.state_dict(),
-        }, True, folder='./trained_models')
-    np.savetxt("traininglosses.txt",np.asarray(losses))
+        }, recent_best==best, folder='./trained_models')
+    np.savetxt("traininglosses.txt", np.asarray(losses))
 
 if __name__ == '__main__':
     main()
